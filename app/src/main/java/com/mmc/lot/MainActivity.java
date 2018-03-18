@@ -1,20 +1,34 @@
 package com.mmc.lot;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText etID, etMsgID;
     private ImageView ivCamera,ivMsgCamera;
     private TextView tvFinish;
+    private BluetoothUtils mBluetoothUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         initView();
+        mBluetoothUtils = BluetoothUtils.getInstance(this);
+//        bleTest();
 
     }
 
@@ -107,5 +123,99 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, SendDetailActivity.class);
             startActivity(intent);
         }
+    }
+
+    private void bleTest() {
+        if (checkLocationPermission()) {
+            if (isGpsProviderEnabled(this)) {
+                checkIsBleState();
+            } else {
+                startLocationSettings(this, 12);
+            }
+        } else {
+            requestLocationPermissions();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults)
+    {
+        if (requestCode == 10001)
+        {
+            if (grantResults == null || grantResults.length == 0) {
+                return;
+            }
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "已获取位置权限", Toast.LENGTH_LONG).show();
+            }
+            else
+            {
+                gotoOpenPermission();
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(final int requestCode, int resultCode, final Intent data)
+    {
+        Log.e("MainActivity", "requestCode:" + requestCode + ", resultCode:" + resultCode);
+        if (requestCode == 12) {
+            if (isGpsProviderEnabled(this)) {
+                Toast.makeText(this, "已打开定位", Toast.LENGTH_LONG).show();
+                checkIsBleState();
+            } else {
+                Toast.makeText(this, "已拒绝打开定位", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == 2001) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, "已打开蓝牙", Toast.LENGTH_LONG).show();
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                Toast.makeText(this, "已拒绝打开蓝牙", Toast.LENGTH_LONG).show();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+
+    }
+
+    private boolean checkLocationPermission() {
+        return checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
+
+    private boolean checkPermission(final String permission) {
+        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestLocationPermissions() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 10001);
+
+    }
+
+    private void gotoOpenPermission()
+    {
+        Toast.makeText(this, "请在设置界面打开位置权限", Toast.LENGTH_LONG).show();
+    }
+
+    public static boolean isGpsProviderEnabled(Context context){
+        LocationManager service = (LocationManager) context.getSystemService(context.LOCATION_SERVICE);
+        return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    private boolean checkIsBleState(){
+        if (!BluetoothUtils.isBluetoothLeSupported(this)){
+            Toast.makeText(this, "此设备不支持蓝牙", Toast.LENGTH_LONG).show();
+        }else if(!mBluetoothUtils.isBluetoothIsEnable()){
+            mBluetoothUtils.askUserToEnableBluetoothIfNeeded(this);
+        }else{
+            return true;
+        }
+        return false;
+    }
+
+    public static void startLocationSettings(Activity context, int requestCode){
+        Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        context.startActivityForResult(enableLocationIntent, requestCode);
     }
 }
