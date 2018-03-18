@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/topbar"
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:background="#BADCEC"
+    android:gravity="center_vertical">
+
+
+    <ImageView
+        android:id="@+id/iv_title_bar_back"
+        android:layout_width="38dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:scaleType="center"
+        android:src="@drawable/nav_back_icon"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+
+    <TextView
+        android:id="@+id/tv_title_bar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textColor="#000000"
+        android:textSize="17dp"
+        tools:text="发货方" />
+
+    <ImageView
+        android:id="@+id/iv_set"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerInParent="true"
+        android:layout_marginRight="10dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_settings_n"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <View
+        android:id="@+id/view_horizontal_line"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_alignParentBottom="true"
+        android:background="#33FFFFFF"
+        android:visibility="visible" />
+
+</RelativeLayout>
