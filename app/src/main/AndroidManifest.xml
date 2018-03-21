@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mmc.lot">
 
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:name=".IotApplication"
@@ -15,7 +15,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize|stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,8 +25,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SendDetailActivity"/>
-        <activity android:name=".ConfirmActivity"/>
+        <activity android:name=".activity.SendDetailActivity" />
+        <activity android:name=".activity.ConfirmActivity" />
+        <activity android:name=".activity.SettingActivity" />
+        <activity android:name=".activity.SelectRoleActivity" />
     </application>
 
 </manifest>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:id="@+id/tv_mine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/tv_msg"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:text="我是" />
+
+    <TextView
+        android:id="@+id/tv_msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/ll_role"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="90dp"
+        android:text="完善您的基本信息， 将使温度检测更方便" />
+
+    <LinearLayout
+        android:id="@+id/ll_role"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical">
+
+
+        <LinearLayout
+            android:id="@+id/ll_take"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/tv_take"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="10dp"
+                android:drawableRight="@drawable/icon_selected"
+                android:padding="10dp"
+                android:text="发货方"
+                android:textSize="16dp" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="300dp"
+            android:layout_height="1dp"
+            android:layout_gravity="center"
+            android:background="#E8E8E8" />
+
+
+        <LinearLayout
+            android:id="@+id/ll_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/tv_send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="10dp"
+                android:drawableRight="@drawable/icon_unselected"
+                android:padding="10dp"
+                android:text="收货方"
+                android:textSize="16dp" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="300dp"
+            android:layout_height="1dp"
+            android:layout_gravity="center"
+            android:background="#E8E8E8" />
+
+
+        <LinearLayout
+            android:id="@+id/ll_admin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/tv_admin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="10dp"
+                android:drawableRight="@drawable/icon_unselected"
+                android:padding="10dp"
+                android:text="管理者"
+                android:textSize="16dp" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_finish"
+        android:layout_width="280dp"
+        android:layout_height="38dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/common_btn_red_shape"
+        android:gravity="center"
+        android:text="确定"
+        android:textColor="#FFFFFF"
+        android:textSize="14dp" />
+
+</RelativeLayout>

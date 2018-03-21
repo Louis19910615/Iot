@@ -49,13 +49,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.mmc.lot.R;
+import com.mmc.lot.bean.AppConfigBean;
+import com.mmc.lot.net.Repository;
+
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String TAG = "MainActivity";
 
     private EditText etID, etMsgID;
-    private ImageView ivCamera,ivMsgCamera;
+    private ImageView ivCamera,ivMsgCamera,ivBack, ivSet;
     private TextView tvFinish;
     private BluetoothUtils mBluetoothUtils;
 
@@ -71,13 +78,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-        ImageView ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
+         ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
         ivBack.setVisibility(View.GONE);
 
         TextView title = (TextView) findViewById(R.id.tv_title_bar_title);
         title.setText("发货方");
 
-        ImageView ivSet = (ImageView) findViewById(R.id.iv_set);
+        ivSet = (ImageView) findViewById(R.id.iv_set);
         ivSet.setVisibility(View.VISIBLE);
 
 
@@ -135,6 +142,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
     }
 
+    private void getAppConfig() {
+        Repository.init().getAppConfig()
+                .observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Observer<AppConfigBean>() {
+                    @Override
+                    public void onSubscribe(Disposable disposable) {
+                    }
+
+                    @Override
+                    public void onNext(AppConfigBean phoneConfigBeanReply) {
+//                        SharePreUtils.getInstance().setAppConfigData(phoneConfigBeanReply);
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -150,6 +181,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (v == tvFinish) {
             Intent intent = new Intent(this, SendDetailActivity.class);
+            startActivity(intent);
+        } else if (v == ivSet) {
+            Intent intent = new Intent(this, SettingActivity.class);
             startActivity(intent);
         }
     }

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#ECECEC"
-    tools:context="com.mmc.lot.MainActivity">
+    tools:context="com.mmc.lot.activity.MainActivity">
 
     <include
         android:id="@+id/header"

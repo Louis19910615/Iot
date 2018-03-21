@@ -27,4 +27,17 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:1.0.1'
     androidTestCompile 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'com.blakequ.androidblemanager:bluetooth-manager-lib:2.1.5'
+
+    // retrofit2
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+
+    //rxjava
+    compile 'io.reactivex.rxjava2:rxjava:2.1.2'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+
+    // fastjson
+    compile 'com.alibaba:fastjson:1.2.32'
+
 }
