@@ -1,4 +1,4 @@
-package com.mmc.lot;
+package com.mmc.lot.activity;
 
 import android.Manifest;
 import android.app.Activity;
@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.nfc.Tag;
+import android.os.Handler;
 import android.os.ParcelUuid;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -32,6 +33,7 @@ import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.BleManager;
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
+import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.blakequ.bluetooth_manager_lib.connect.GattError;
@@ -42,9 +44,13 @@ import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
+import com.mmc.lot.activity.SendDetailActivity;
+import com.mmc.lot.activity.SettingActivity;
+import com.mmc.lot.ble.ServiceUuidConstant;
 import com.orhanobut.logger.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +63,8 @@ import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.mmc.lot.ble.ServiceUuidConstant.IOT_SERVICE_UUID;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String TAG = "MainActivity";
@@ -65,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView ivCamera,ivMsgCamera,ivBack, ivSet;
     private TextView tvFinish;
     private BluetoothUtils mBluetoothUtils;
+
+    private String deviceName;
+    private String deviceAddress;
+    private BluetoothConnectManager connectManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +87,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBluetoothUtils = BluetoothUtils.getInstance(this);
 //        bleTest();
 //        scan(this);
+//
+//        new Handler().postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                BluetoothGattService bluetoothGattService = connectManager.getBluetoothGatt(deviceAddress).getService(ServiceUuidConstant.IOT_SERVICE_UUID);
+//                if (bluetoothGattService != null) {
+////                    BluetoothGattCharacteristic rxCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.RX_CHAR_UUID);
+////                    if (rxCharacteristic != null) {
+////                        connectManager.addBluetoothSubscribeData(
+////                                new BluetoothSubScribeData.Builder().setCharacteristicNotify(rxCharacteristic.getUuid()).build());
+////                        connectManager.startSubscribe(connectManager.getBluetoothGatt(deviceName));
+////                    }
+//
+//                    BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
+//                    if (txCharacteristic != null) {
+//                        connectManager.setServiceUUID(bluetoothGattService.getUuid().toString());
+//                        connectManager.addBluetoothSubscribeData(
+//                                new BluetoothSubScribeData.Builder().setCharacteristicWrite(txCharacteristic.getUuid(), new byte[]{0x2, 0x0, 0x2 }).build()
+//                        );
+//
+//                        boolean isSuccess = connectManager.startSubscribe(connectManager.getBluetoothGatt(deviceAddress));
+//                        Log.e(TAG, "TX_CHAR_UUID start subscribe is " + isSuccess);
+//                    }
+//                }
+//            }
+//        }, 5000);
     }
 
     private void initView() {
@@ -296,11 +334,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onScanResult(int callbackType, ScanResultCompat result) {
                 super.onScanResult(callbackType, result);
-                String deviceName = result.getScanRecord().getDeviceName();
-                Logger.i("scan device "+result.getLeDevice().getAddress()+" "+deviceName);
+                deviceName = result.getScanRecord().getDeviceName();
+                deviceAddress = result.getLeDevice().getAddress();
+                Logger.i("scan device "+ deviceAddress +" "+deviceName);
                 if (!isConnectting) {
                     scanManager.stopCycleScan();
-                    connect(result.getLeDevice().getAddress(), deviceName);
+                    connect(deviceAddress, deviceName);
                     isConnectting = true;
                 }
             }
@@ -321,7 +360,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void connect(String deviceAddress, String deviceName) {
-        final BluetoothConnectManager connectManager = BluetoothConnectManager.getInstance(this);
+        connectManager = BluetoothConnectManager.getInstance(this);
         ConnectStateListener stateListener = new ConnectStateListener() {
             @Override
             public void onConnectStateChanged(String address, ConnectState state) {
@@ -343,6 +382,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+                Log.e(TAG, "characteristic read is " + Arrays.toString(characteristic.getValue()));
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Log.e(TAG, "success to read characteristic");
                 }else{
@@ -363,6 +403,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                 super.onCharacteristicChanged(gatt, characteristic);
+                Log.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
             }
 
             @Override
@@ -390,8 +431,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             // 00010203-0405-0607-0809-0a0b0c0d2b10
                             // Read Write Without Response
                             // 00010203-0405-0607-0809-0a0b0c0d2b11
+                            BluetoothGattService bluetoothGattService = gatt.getService(IOT_SERVICE_UUID);
+                            if (bluetoothGattService != null) {
+                                BluetoothGattCharacteristic rxCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.RX_CHAR_UUID);
+                                if (rxCharacteristic != null) {
+                                    connectManager.setServiceUUID(bluetoothGattService.getUuid().toString());
+                                    connectManager.addBluetoothSubscribeData(
+                                            new BluetoothSubScribeData.Builder().setCharacteristicNotify(rxCharacteristic.getUuid()).build());
+
+                                    boolean isSuccess = connectManager.startSubscribe(gatt);
+                                    Log.e(TAG, "RX_CHAR_UUID start subscribe is " + isSuccess);
+                                }
+
+//                                BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
+//                                if (txCharacteristic != null) {
+//                                    connectManager.addBluetoothSubscribeData(
+//                                            new BluetoothSubScribeData.Builder().setCharacteristicWrite(txCharacteristic.getUuid(), new byte[]{0x2, 0x0, 0x2 }).build()
+//                                    );
+//                                    connectManager.startSubscribe(gatt);
+//                                }
+                            }
                             displayGattServices(gatt.getServices());
-                            connectManager.startSubscribe(gatt);
+//                            connectManager.startSubscribe(gatt);
                         }
                     });
                 }
@@ -409,6 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (final BluetoothGattService gattService : gattServices) {
 
             final List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
+            System.out.print("-----service uuid is:" + gattService.getUuid());
             final List<BluetoothGattCharacteristic> charas = new ArrayList<>();
 
             // Loops through available Characteristics.
