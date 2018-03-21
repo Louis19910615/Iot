@@ -2,10 +2,18 @@ package com.mmc.lot;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.nfc.Tag;
+import android.os.ParcelUuid;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -18,12 +26,33 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.blakequ.bluetooth_manager_lib.BleManager;
+import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
+import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
+import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
+import com.blakequ.bluetooth_manager_lib.connect.GattError;
+import com.blakequ.bluetooth_manager_lib.device.resolvers.GattAttributeResolver;
+import com.blakequ.bluetooth_manager_lib.scan.BluetoothScanManager;
+import com.blakequ.bluetooth_manager_lib.scan.ScanOverListener;
+import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat;
+import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
+import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
+import com.orhanobut.logger.Logger;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    public static final String TAG = "MainActivity";
 
     private EditText etID, etMsgID;
     private ImageView ivCamera,ivMsgCamera;
@@ -38,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         mBluetoothUtils = BluetoothUtils.getInstance(this);
 //        bleTest();
-
+//        scan(this);
     }
 
     private void initView() {
@@ -218,4 +247,176 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         context.startActivityForResult(enableLocationIntent, requestCode);
     }
+
+    private boolean isConnectting = false;
+    public void scan(Context context) {
+        final BluetoothScanManager scanManager = BleManager.getScanManager(context);
+        scanManager.addScanFilterCompats(new ScanFilterCompat.Builder().setDeviceName("tModul").build());
+        scanManager.setScanOverListener(new ScanOverListener() {
+            @Override
+            public void onScanOver() {
+                // scan over of one times
+            }
+        });
+        scanManager.setScanCallbackCompat(new ScanCallbackCompat() {
+            @Override
+            public void onScanResult(int callbackType, ScanResultCompat result) {
+                super.onScanResult(callbackType, result);
+                String deviceName = result.getScanRecord().getDeviceName();
+                Logger.i("scan device "+result.getLeDevice().getAddress()+" "+deviceName);
+                if (!isConnectting) {
+                    scanManager.stopCycleScan();
+                    connect(result.getLeDevice().getAddress(), deviceName);
+                    isConnectting = true;
+                }
+            }
+
+            @Override
+            public void onBatchScanResults(List<ScanResultCompat> results) {
+                super.onBatchScanResults(results);
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                super.onScanFailed(errorCode);
+            }
+        });
+
+//        scanManager.startCycleScan();
+        scanManager.startScanNow();
+    }
+
+    private void connect(String deviceAddress, String deviceName) {
+        final BluetoothConnectManager connectManager = BluetoothConnectManager.getInstance(this);
+        ConnectStateListener stateListener = new ConnectStateListener() {
+            @Override
+            public void onConnectStateChanged(String address, ConnectState state) {
+                switch (state) {
+                    case CONNECTED:
+                        Logger.e(TAG, "connected");
+                        break;
+                    case CONNECTING:
+                        Logger.e(TAG, "connecting");
+                        break;
+                    case NORMAL:
+                        Logger.e(TAG, "normal");
+                        break;
+                }
+            }
+        };
+        connectManager.addConnectStateListener(stateListener);
+        connectManager.setBluetoothGattCallback(new BluetoothGattCallback() {
+
+            @Override
+            public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.e(TAG, "success to read characteristic");
+                }else{
+                    Log.e(TAG, "fail to read characteristic");
+                }
+            }
+
+            @Override
+            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                super.onCharacteristicWrite(gatt, characteristic, status);
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.e(TAG, "success to write characteristic");
+                }else{
+                    Log.e(TAG, "fail to write characteristic");
+                }
+            }
+
+            @Override
+            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                super.onCharacteristicChanged(gatt, characteristic);
+            }
+
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, final int status, int newState) {
+                super.onConnectionStateChange(gatt, status, newState);
+                if (newState == BluetoothProfile.STATE_DISCONNECTED){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "Disconnect! error："+ GattError.parseConnectionError(status), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
+                super.onServicesDiscovered(gatt, status);
+                if (status == BluetoothGatt.GATT_SUCCESS){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // gatt.getService(UUID.fromString("00010203-0405-0607-0809-0a0b0c0d2b10"));
+                            // Read Notify UUID
+                            // 00010203-0405-0607-0809-0a0b0c0d2b10
+                            // Read Write Without Response
+                            // 00010203-0405-0607-0809-0a0b0c0d2b11
+                            displayGattServices(gatt.getServices());
+                            connectManager.startSubscribe(gatt);
+                        }
+                    });
+                }
+            }
+        });
+        connectManager.connect(deviceAddress);
+    }
+
+    private void displayGattServices(final List<BluetoothGattService> gattServices) {
+        if (gattServices == null) return;
+
+        String uuid = null;
+
+        // Loops through available GATT Services.
+        for (final BluetoothGattService gattService : gattServices) {
+
+            final List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
+            final List<BluetoothGattCharacteristic> charas = new ArrayList<>();
+
+            // Loops through available Characteristics.
+            for (final BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+                charas.add(gattCharacteristic);
+                uuid = gattCharacteristic.getUuid().toString();
+                String property = getPropertyString(gattCharacteristic.getProperties());
+                System.out.println("-----property is:" + property);
+                System.out.println("-----chat uuid:"+ uuid);
+                for (BluetoothGattDescriptor gattDescriptor:gattCharacteristic.getDescriptors()){
+                    System.out.println("--------des name:" + gattDescriptor.getUuid());
+                    System.out.println("--------des uuid:" + gattDescriptor.getValue()+" "+gattDescriptor.getPermissions());
+                }
+            }
+        }
+
+    }
+
+    private String getPropertyString(int property){
+        StringBuilder sb = new StringBuilder("(");
+        //Read
+        if ((property & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+            sb.append("Read ");
+        }
+        //Write
+        if ((property & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0
+                || (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
+            sb.append("Write ");
+        }
+        //Notify
+        if ((property & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0
+                || (property & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
+            sb.append("Notity Indicate ");
+        }
+        //Broadcast
+        if ((property & BluetoothGattCharacteristic.PROPERTY_BROADCAST) > 0){
+            sb.append("Broadcast ");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append(")");
+        return sb.toString();
+    }
+
+
 }
