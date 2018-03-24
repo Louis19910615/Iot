@@ -151,8 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void afterTextChanged(Editable s) {
-                etID.setText(s);
-                etID.setSelection(s.length());
+//                etID.setText(s);
+//                etID.setSelection(s.length());
             }
         });
 
@@ -169,8 +169,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void afterTextChanged(Editable s) {
-                etMsgID.setText(s);
-                etMsgID.setSelection(s.length());
+//                etMsgID.setText(s);
+//                etMsgID.setSelection(s.length());
             }
         });
     }

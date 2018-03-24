@@ -55,7 +55,10 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
-                android:background="@null" />
+                android:lines="1"
+                android:inputType="text"
+                android:background="@null"
+                android:numeric="integer" />
 
             <ImageView
                 android:id="@+id/iv_camera"
@@ -94,6 +97,7 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
+                android:inputType="text"
                 android:background="@null" />
 
             <ImageView
