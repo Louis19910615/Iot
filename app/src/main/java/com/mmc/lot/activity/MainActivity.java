@@ -37,6 +37,7 @@ import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.blakequ.bluetooth_manager_lib.connect.GattError;
+import com.blakequ.bluetooth_manager_lib.device.BluetoothService;
 import com.blakequ.bluetooth_manager_lib.device.resolvers.GattAttributeResolver;
 import com.blakequ.bluetooth_manager_lib.scan.BluetoothScanManager;
 import com.blakequ.bluetooth_manager_lib.scan.ScanOverListener;
@@ -52,8 +53,10 @@ import com.orhanobut.logger.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.AppConfigBean;
@@ -74,10 +77,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tvFinish;
     private BluetoothUtils mBluetoothUtils;
 
-    private String deviceName;
-    private String deviceAddress;
-    private BluetoothConnectManager connectManager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,33 +85,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         mBluetoothUtils = BluetoothUtils.getInstance(this);
 //        bleTest();
-//        scan(this);
-//
-//        new Handler().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                BluetoothGattService bluetoothGattService = connectManager.getBluetoothGatt(deviceAddress).getService(ServiceUuidConstant.IOT_SERVICE_UUID);
-//                if (bluetoothGattService != null) {
-////                    BluetoothGattCharacteristic rxCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.RX_CHAR_UUID);
-////                    if (rxCharacteristic != null) {
-////                        connectManager.addBluetoothSubscribeData(
-////                                new BluetoothSubScribeData.Builder().setCharacteristicNotify(rxCharacteristic.getUuid()).build());
-////                        connectManager.startSubscribe(connectManager.getBluetoothGatt(deviceName));
-////                    }
-//
-//                    BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
-//                    if (txCharacteristic != null) {
-//                        connectManager.setServiceUUID(bluetoothGattService.getUuid().toString());
-//                        connectManager.addBluetoothSubscribeData(
-//                                new BluetoothSubScribeData.Builder().setCharacteristicWrite(txCharacteristic.getUuid(), new byte[]{0x2, 0x0, 0x2 }).build()
-//                        );
-//
-//                        boolean isSuccess = connectManager.startSubscribe(connectManager.getBluetoothGatt(deviceAddress));
-//                        Log.e(TAG, "TX_CHAR_UUID start subscribe is " + isSuccess);
-//                    }
-//                }
-//            }
-//        }, 5000);
     }
 
     private void initView() {
@@ -319,200 +291,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         context.startActivityForResult(enableLocationIntent, requestCode);
     }
-
-    private boolean isConnectting = false;
-    public void scan(Context context) {
-        final BluetoothScanManager scanManager = BleManager.getScanManager(context);
-        scanManager.addScanFilterCompats(new ScanFilterCompat.Builder().setDeviceName("tModul").build());
-        scanManager.setScanOverListener(new ScanOverListener() {
-            @Override
-            public void onScanOver() {
-                // scan over of one times
-            }
-        });
-        scanManager.setScanCallbackCompat(new ScanCallbackCompat() {
-            @Override
-            public void onScanResult(int callbackType, ScanResultCompat result) {
-                super.onScanResult(callbackType, result);
-                deviceName = result.getScanRecord().getDeviceName();
-                deviceAddress = result.getLeDevice().getAddress();
-                Logger.i("scan device "+ deviceAddress +" "+deviceName);
-                if (!isConnectting) {
-                    scanManager.stopCycleScan();
-                    connect(deviceAddress, deviceName);
-                    isConnectting = true;
-                }
-            }
-
-            @Override
-            public void onBatchScanResults(List<ScanResultCompat> results) {
-                super.onBatchScanResults(results);
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                super.onScanFailed(errorCode);
-            }
-        });
-
-//        scanManager.startCycleScan();
-        scanManager.startScanNow();
-    }
-
-    private void connect(String deviceAddress, String deviceName) {
-        connectManager = BluetoothConnectManager.getInstance(this);
-        ConnectStateListener stateListener = new ConnectStateListener() {
-            @Override
-            public void onConnectStateChanged(String address, ConnectState state) {
-                switch (state) {
-                    case CONNECTED:
-                        Logger.e(TAG, "connected");
-                        break;
-                    case CONNECTING:
-                        Logger.e(TAG, "connecting");
-                        break;
-                    case NORMAL:
-                        Logger.e(TAG, "normal");
-                        break;
-                }
-            }
-        };
-        connectManager.addConnectStateListener(stateListener);
-        connectManager.setBluetoothGattCallback(new BluetoothGattCallback() {
-
-            @Override
-            public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-                Log.e(TAG, "characteristic read is " + Arrays.toString(characteristic.getValue()));
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.e(TAG, "success to read characteristic");
-                }else{
-                    Log.e(TAG, "fail to read characteristic");
-                }
-            }
-
-            @Override
-            public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                super.onCharacteristicWrite(gatt, characteristic, status);
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.e(TAG, "success to write characteristic");
-                }else{
-                    Log.e(TAG, "fail to write characteristic");
-                }
-            }
-
-            @Override
-            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-                super.onCharacteristicChanged(gatt, characteristic);
-                Log.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
-            }
-
-            @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, final int status, int newState) {
-                super.onConnectionStateChange(gatt, status, newState);
-                if (newState == BluetoothProfile.STATE_DISCONNECTED){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this, "Disconnect! error："+ GattError.parseConnectionError(status), Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
-                super.onServicesDiscovered(gatt, status);
-                if (status == BluetoothGatt.GATT_SUCCESS){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // gatt.getService(UUID.fromString("00010203-0405-0607-0809-0a0b0c0d2b10"));
-                            // Read Notify UUID
-                            // 00010203-0405-0607-0809-0a0b0c0d2b10
-                            // Read Write Without Response
-                            // 00010203-0405-0607-0809-0a0b0c0d2b11
-                            BluetoothGattService bluetoothGattService = gatt.getService(IOT_SERVICE_UUID);
-                            if (bluetoothGattService != null) {
-                                BluetoothGattCharacteristic rxCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.RX_CHAR_UUID);
-                                if (rxCharacteristic != null) {
-                                    connectManager.setServiceUUID(bluetoothGattService.getUuid().toString());
-                                    connectManager.addBluetoothSubscribeData(
-                                            new BluetoothSubScribeData.Builder().setCharacteristicNotify(rxCharacteristic.getUuid()).build());
-
-                                    boolean isSuccess = connectManager.startSubscribe(gatt);
-                                    Log.e(TAG, "RX_CHAR_UUID start subscribe is " + isSuccess);
-                                }
-
-//                                BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
-//                                if (txCharacteristic != null) {
-//                                    connectManager.addBluetoothSubscribeData(
-//                                            new BluetoothSubScribeData.Builder().setCharacteristicWrite(txCharacteristic.getUuid(), new byte[]{0x2, 0x0, 0x2 }).build()
-//                                    );
-//                                    connectManager.startSubscribe(gatt);
-//                                }
-                            }
-                            displayGattServices(gatt.getServices());
-//                            connectManager.startSubscribe(gatt);
-                        }
-                    });
-                }
-            }
-        });
-        connectManager.connect(deviceAddress);
-    }
-
-    private void displayGattServices(final List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
-
-        String uuid = null;
-
-        // Loops through available GATT Services.
-        for (final BluetoothGattService gattService : gattServices) {
-
-            final List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
-            System.out.print("-----service uuid is:" + gattService.getUuid());
-            final List<BluetoothGattCharacteristic> charas = new ArrayList<>();
-
-            // Loops through available Characteristics.
-            for (final BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-                charas.add(gattCharacteristic);
-                uuid = gattCharacteristic.getUuid().toString();
-                String property = getPropertyString(gattCharacteristic.getProperties());
-                System.out.println("-----property is:" + property);
-                System.out.println("-----chat uuid:"+ uuid);
-                for (BluetoothGattDescriptor gattDescriptor:gattCharacteristic.getDescriptors()){
-                    System.out.println("--------des name:" + gattDescriptor.getUuid());
-                    System.out.println("--------des uuid:" + gattDescriptor.getValue()+" "+gattDescriptor.getPermissions());
-                }
-            }
-        }
-
-    }
-
-    private String getPropertyString(int property){
-        StringBuilder sb = new StringBuilder("(");
-        //Read
-        if ((property & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-            sb.append("Read ");
-        }
-        //Write
-        if ((property & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0
-                || (property & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
-            sb.append("Write ");
-        }
-        //Notify
-        if ((property & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0
-                || (property & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
-            sb.append("Notity Indicate ");
-        }
-        //Broadcast
-        if ((property & BluetoothGattCharacteristic.PROPERTY_BROADCAST) > 0){
-            sb.append("Broadcast ");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-        sb.append(")");
-        return sb.toString();
-    }
-
 
 }
