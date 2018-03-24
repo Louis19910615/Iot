@@ -1,8 +1,11 @@
 package com.mmc.lot.net;
 
 import com.mmc.lot.bean.AppConfigBean;
+import com.mmc.lot.bean.RegisterBean;
 import com.mmc.lot.fastjson.FastJsonConverterFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -58,5 +61,18 @@ public class Repository {
      */
     public Observable<AppConfigBean> getAppConfig() {
         return apiService.getConfig();
+    }
+
+    /**
+     * 注册接口
+     */
+
+    public Observable<RegisterBean> register(String username, String phone, String password, String usertype) {
+        Map<String, String> map = new HashMap<>();
+        map.put("username", username);
+        map.put("phone", phone);
+        map.put("password", password);
+        map.put("usertype",usertype);
+        return apiService.register(map);
     }
 }

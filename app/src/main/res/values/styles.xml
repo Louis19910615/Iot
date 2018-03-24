@@ -23,4 +23,15 @@
 
     </style>
 
+    <style name="edittext_style">
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:textColorHint">#3e3e3e</item>
+        <item name="android:textSize">14dp</item>
+    </style>
+
+    <style name="LoginEditText" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">#DDDDDD</item>
+        <item name="colorControlActivated">#DDDDDD</item>
+    </style>
+
 </resources>
