@@ -14,9 +14,9 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_margin="5dp"
+        android:background="@drawable/common_back_shape"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:background="@drawable/common_back_shape">
+        android:paddingRight="10dp">
 
         <TextView
             style="@style/title"
@@ -31,8 +31,8 @@
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:drawablePadding="5dp"
-            android:gravity="center"
             android:drawableRight="@drawable/arrow_list"
+            android:gravity="center"
             android:text="发货方"
             android:textColor="#000000"
             android:textSize="18dp" />
@@ -45,14 +45,16 @@
         android:layout_margin="10dp"
         android:text="本地记录"
         android:textColor="#7A7A7A"
-        android:textSize="12dp" />
+        android:textSize="12dp"
+        android:visibility="gone" />
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_margin="5dp"
         android:background="@drawable/common_back_shape"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:visibility="gone">
 
         <TextView
             style="@style/title"
@@ -78,7 +80,8 @@
         android:layout_height="40dp"
         android:layout_margin="5dp"
         android:background="@drawable/common_back_shape"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:visibility="gone">
 
         <TextView
             style="@style/title"

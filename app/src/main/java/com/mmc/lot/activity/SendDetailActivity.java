@@ -4,11 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mmc.lot.R;
+
+import java.text.SimpleDateFormat;
 
 /**
  * Created by zhangzd on 2018/3/18.
@@ -16,7 +19,7 @@ import com.mmc.lot.R;
 
 public class SendDetailActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private TextView tvId, tvMsgId, tvTemp, tvFinish;
+    private TextView tvId, tvMsgId, tvTemp, tvFinish, tvTimer;
 
 
     @Override
@@ -36,13 +39,27 @@ public class SendDetailActivity extends AppCompatActivity implements View.OnClic
         TextView title = (TextView) findViewById(R.id.tv_title_bar_title);
         title.setText("发货单详情");
 
+        String macId = getIntent().getStringExtra("mac");
+        String orderId = getIntent().getStringExtra("orderId");
+        String saftTemp = getIntent().getStringExtra("saft_temp");
+
+
         tvId = (TextView) findViewById(R.id.tv_id);
+        tvId.setText(TextUtils.isEmpty(macId) ? "EC24 B82A 6738" : macId);
         tvMsgId = (TextView) findViewById(R.id.tv_msg_id);
+        tvMsgId.setText(TextUtils.isEmpty(orderId) ? "227 466 262 474" : orderId);
         tvTemp = (TextView) findViewById(R.id.tv_temp);
+        tvTemp.setText(TextUtils.isEmpty(saftTemp) ? "23.0 - 25.0 °C" : saftTemp);
         tvFinish = (TextView) findViewById(R.id.tv_finish);
         tvFinish.setOnClickListener(this);
+        tvTimer = (TextView) findViewById(R.id.tv_timer);
+        tvTimer.setText(timeStamp2Date());
 
+    }
 
+    private String timeStamp2Date() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return dateFormat.format(System.currentTimeMillis());
     }
 
     @Override

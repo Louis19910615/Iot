@@ -2,80 +2,39 @@ package com.mmc.lot.activity;
 
 import android.Manifest;
 import android.app.Activity;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.nfc.Tag;
-import android.os.Handler;
-import android.os.ParcelUuid;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.SimpleExpandableListAdapter;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.blakequ.bluetooth_manager_lib.BleManager;
-import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
-import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
-import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
-import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
-import com.blakequ.bluetooth_manager_lib.connect.GattError;
-import com.blakequ.bluetooth_manager_lib.device.BluetoothService;
-import com.blakequ.bluetooth_manager_lib.device.resolvers.GattAttributeResolver;
-import com.blakequ.bluetooth_manager_lib.scan.BluetoothScanManager;
-import com.blakequ.bluetooth_manager_lib.scan.ScanOverListener;
-import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat;
-import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
-import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
-import com.mmc.lot.activity.SendDetailActivity;
-import com.mmc.lot.activity.SettingActivity;
-import com.mmc.lot.ble.ServiceUuidConstant;
-import com.orhanobut.logger.Logger;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import com.mmc.lot.R;
-import com.mmc.lot.bean.AppConfigBean;
-import com.mmc.lot.net.Repository;
-
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-
-import static com.mmc.lot.ble.ServiceUuidConstant.IOT_SERVICE_UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String TAG = "MainActivity";
 
     private EditText etID, etMsgID;
-    private ImageView ivCamera,ivMsgCamera,ivBack, ivSet;
+    private ImageView ivCamera, ivMsgCamera, ivBack, ivSet;
     private TextView tvFinish;
     private BluetoothUtils mBluetoothUtils;
+    private RelativeLayout rlTemp;
+    private TextView tvTemp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-         ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
+        ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
         ivBack.setVisibility(View.GONE);
 
         TextView title = (TextView) findViewById(R.id.tv_title_bar_title);
@@ -109,6 +68,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         etID = (EditText) findViewById(R.id.et_id);
         etMsgID = (EditText) findViewById(R.id.et_send_id);
+
+        rlTemp = (RelativeLayout) findViewById(R.id.rl_temp);
+        rlTemp.setOnClickListener(this);
+        tvTemp = (TextView) findViewById(R.id.tv_temp);
 
         etID.addTextChangedListener(new TextWatcher() {
             @Override
@@ -152,30 +115,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
     }
 
-    private void getAppConfig() {
-        Repository.init().getAppConfig()
-                .observeOn(Schedulers.io())
-                .subscribeOn(Schedulers.io())
-                .subscribe(new Observer<AppConfigBean>() {
-                    @Override
-                    public void onSubscribe(Disposable disposable) {
-                    }
-
-                    @Override
-                    public void onNext(AppConfigBean phoneConfigBeanReply) {
-//                        SharePreUtils.getInstance().setAppConfigData(phoneConfigBeanReply);
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                    }
-
-                    @Override
-                    public void onComplete() {
-                    }
-                });
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -191,12 +130,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (v == tvFinish) {
             Intent intent = new Intent(this, SendDetailActivity.class);
+            intent.putExtra("mac", etID.getText().toString());
+            intent.putExtra("orderId", etMsgID.getText().toString());
+            intent.putExtra("saft_temp", tvTemp.getText());
             startActivity(intent);
         } else if (v == ivSet) {
             Intent intent = new Intent(this, SettingActivity.class);
             startActivity(intent);
+        } else if (v == rlTemp) {
+            Intent intent = new Intent(this, TempActivity.class);
+            startActivityForResult(intent, 201);
         }
     }
+
 
     private void bleTest() {
         if (checkLocationPermission()) {
@@ -247,6 +193,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "已打开蓝牙", Toast.LENGTH_LONG).show();
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Toast.makeText(this, "已拒绝打开蓝牙", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == 201) {
+            if (data != null) {
+                String temp = data.getStringExtra("max_min");
+                tvTemp.setText(temp);
             }
         }
         super.onActivityResult(requestCode, resultCode, data);
