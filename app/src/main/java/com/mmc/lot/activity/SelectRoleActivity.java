@@ -16,10 +16,11 @@ import com.mmc.lot.R;
  * Created by zhangzd on 2018/3/20.
  */
 
-public class SelectRoleActivity extends AppCompatActivity implements View.OnClickListener{
+public class SelectRoleActivity extends AppCompatActivity implements View.OnClickListener {
 
     private TextView tvTake, tvSend, tvAdmin, tvConfirm;
     private LinearLayout llTake, llSend, llAdmin;
+    private String userType;
 
 
     @Override
@@ -56,6 +57,7 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
 
         tvConfirm = (TextView) findViewById(R.id.tv_finish);
         tvConfirm.setOnClickListener(this);
+        userType = "收货人";
 
     }
 
@@ -79,7 +81,7 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawable = getResources().getDrawable(R.drawable.icon_unselected);
             drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
             tvAdmin.setCompoundDrawables(null, null, drawable, null);
-
+            userType = "收货方";
 
         } else if (v == llSend) {
             Drawable drawableTake = getResources().getDrawable(R.drawable.icon_unselected);
@@ -93,6 +95,8 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawableAdmin = getResources().getDrawable(R.drawable.icon_unselected);
             drawableAdmin.setBounds(0, 0, drawableAdmin.getMinimumWidth(), drawableAdmin.getMinimumHeight());
             tvAdmin.setCompoundDrawables(null, null, drawableAdmin, null);
+            userType = "发货方";
+
 
         } else if (v == llAdmin) {
             Drawable drawable = getResources().getDrawable(R.drawable.icon_selected);
@@ -106,9 +110,13 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawableSend = getResources().getDrawable(R.drawable.icon_unselected);
             drawableSend.setBounds(0, 0, drawableSend.getMinimumWidth(), drawableSend.getMinimumHeight());
             tvSend.setCompoundDrawables(null, null, drawableSend, null);
+            userType = "快递员";
+
         } else if (v == tvConfirm) {
             Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("title", userType);
             startActivity(intent);
+            finish();
         }
     }
 }

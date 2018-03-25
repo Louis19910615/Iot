@@ -10,15 +10,27 @@ import org.greenrobot.eventbus.EventBus;
  */
 
 public class IotApplication extends Application {
+
+    private static IotApplication instance;
+
     private static Context context;
     @Override
     public void onCreate() {
         super.onCreate();
         context = this;
         EventBus.getDefault().register(this);
+        init();
     }
 
     public static Context getContext() {
         return context;
+    }
+
+    private void init() {
+        instance = this;
+    }
+
+    public static IotApplication getInstance() {
+        return instance;
     }
 }

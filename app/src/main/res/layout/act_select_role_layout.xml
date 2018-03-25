@@ -96,7 +96,7 @@
                 android:drawablePadding="10dp"
                 android:drawableRight="@drawable/icon_unselected"
                 android:padding="10dp"
-                android:text="管理者"
+                android:text="快递员"
                 android:textSize="16dp" />
 
         </LinearLayout>

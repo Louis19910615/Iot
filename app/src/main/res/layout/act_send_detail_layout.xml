@@ -72,6 +72,7 @@
             android:background="#E8E8E8" />
 
         <TextView
+            android:id="@+id/tv_timer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
@@ -176,7 +177,7 @@
                 android:layout_weight="1"
                 android:background="@null"
                 android:gravity="center|left"
-                android:text="23.0 - 25.0°C"
+                android:text="23.0 - 25.0 °C"
                 android:textColor="#000000" />
 
         </LinearLayout>

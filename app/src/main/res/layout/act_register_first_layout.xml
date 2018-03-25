@@ -17,11 +17,20 @@
 
 
         <EditText
+            android:id="@+id/et_phone"
+            style="@style/edittext_style"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="手机号"
+            android:inputType="phone"
+            android:theme="@style/LoginEditText" />
+
+        <EditText
             android:id="@+id/et_nickname"
             style="@style/edittext_style"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:hint="用户名/手机号"
+            android:hint="用户名"
             android:theme="@style/LoginEditText" />
 
         <EditText
@@ -34,6 +43,40 @@
 
     </LinearLayout>
 
+    <RadioGroup
+        android:id="@+id/rg_person"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp">
+
+        <RadioButton
+            android:id="@+id/rb_send_person"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="供应商" />
+
+        <RadioButton
+            android:id="@+id/rb_person"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="客户" />
+
+        <RadioButton
+            android:id="@+id/rb_courier"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="快递员" />
+
+
+    </RadioGroup>
+
     <TextView
         android:id="@+id/tv_finish"
         android:layout_width="280dp"
@@ -42,20 +85,9 @@
         android:layout_marginTop="40dp"
         android:background="@drawable/common_btn_shape"
         android:gravity="center"
-        android:text="登录"
+        android:text="注册"
         android:textColor="#FFFFFF"
         android:textSize="16dp" />
 
-    <TextView
-        android:id="@+id/tv_register"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|right"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:text="注册账号"
-        android:textColor="#3e3e3e"
-        android:textSize="14dp" />
 
 </LinearLayout>

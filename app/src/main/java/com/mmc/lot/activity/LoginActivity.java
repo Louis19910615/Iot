@@ -1,41 +1,41 @@
 package com.mmc.lot.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mmc.lot.R;
 import com.mmc.lot.bean.RegisterBean;
 import com.mmc.lot.net.Repository;
 
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
- * Created by zhangzd on 2018/3/24.
+ * @author by zhangzd on 2018/3/25.
  */
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private EditText etPhone, etNickName, etNum;
-    private TextView tvRegister;
+    private EditText etNickName, etNum;
+    private TextView tvLogin, tvRegitster;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_login_layout);
-
         ImageView ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
-        ivBack.setVisibility(View.VISIBLE);
+        ivBack.setVisibility(View.GONE);
         ivBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -44,81 +44,24 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         });
 
         TextView title = (TextView) findViewById(R.id.tv_title_bar_title);
-        title.setText("注册");
+        title.setText("登录");
 
         ImageView ivSet = (ImageView) findViewById(R.id.iv_set);
         ivSet.setVisibility(View.GONE);
 
-        etPhone = (EditText) findViewById(R.id.et_phone);
         etNickName = (EditText) findViewById(R.id.et_nickname);
         etNum = (EditText) findViewById(R.id.et_num);
-        tvRegister = (TextView) findViewById(R.id.tv_finish);
-        tvRegister.setOnClickListener(this);
-        initEt();
+        tvLogin = (TextView) findViewById(R.id.tv_finish);
+        tvLogin.setOnClickListener(this);
+
+        tvRegitster = (TextView) findViewById(R.id.tv_register);
+        tvRegitster.setOnClickListener(this);
+
     }
 
-    private void initEt() {
-        etPhone.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-//                etPhone.setText(s);
-//                etPhone.setSelection(s.length());
-            }
-        });
-        etNickName.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-//                etNickName.setText(s);
-//                etNickName.setSelection(s.length());
-            }
-        });
-
-        etNum.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-//                etNum.setText(s);
-//                etNum.setSelection(s.length());
-            }
-
-        });
-    }
-
-    private void register() {
-        Repository.init().register(etNickName.getText().toString(),
-                etPhone.getText().toString(),
-                etNickName.getText().toString(),
-                "1")
+    private void login() {
+        Repository.init().login(etNickName.getText().toString(),
+                etNickName.getText().toString())
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .subscribe(new Observer<RegisterBean>() {
@@ -129,13 +72,31 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                     @Override
                     public void onNext(RegisterBean registerBean) {
-                        Log.d("zzdebug", registerBean.toString());
+                        Log.d("zzdebug", "" + registerBean.toString());
+                        if (registerBean != null ) {
+                            if (registerBean.getC() == 1) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(LoginActivity.this, "登录成功", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         Log.d("zzdebug", "error:" + e.getMessage());
-
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(LoginActivity.this, "登录失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
 
                     @Override
@@ -146,16 +107,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     @Override
-    public void onClick(View v) {
-        if (v == tvRegister) {
-            register();
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
     }
 
 
+    @Override
+    public void onClick(View v) {
+        if (v == tvLogin) {
+            if (TextUtils.isEmpty(etNickName.getText().toString().trim()) || TextUtils.isEmpty(etNum.getText().toString().trim())) {
+                Toast.makeText(this, "用户名和密码不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            login();
+        } else if (v == tvRegitster) {
+            Intent intent = new Intent(this, RegisterActivity.class);
+            startActivity(intent);
+        }
+    }
 }

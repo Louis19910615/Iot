@@ -43,4 +43,14 @@ public class RegisterBean {
     public void setE(String e) {
         this.e = e;
     }
+
+    @Override
+    public String toString() {
+        return "RegisterBean{" +
+                "c=" + c +
+                ", m='" + m + '\'' +
+                ", o='" + o + '\'' +
+                ", e='" + e + '\'' +
+                '}';
+    }
 }

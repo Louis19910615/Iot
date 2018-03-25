@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ECECEC"
-    tools:context="com.mmc.lot.activity.MainActivity">
+    android:orientation="vertical">
 
     <include
         android:id="@+id/header"
@@ -18,7 +15,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/header"
         android:layout_marginTop="15dp"
-        android:text="将设备与对应的快递单号绑定" />
+        android:lineSpacingExtra="1dp"
+        android:text="请设置产品的安全温度范围，允许范围：-30 ～ 60 °C, 最低温不能高于最高温。" />
 
     <LinearLayout
         android:id="@+id/ll_first"
@@ -46,27 +44,28 @@
                 style="@style/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="秒秒测ID" />
+                android:text="上限温度" />
 
             <EditText
-                android:id="@+id/et_id"
+                android:id="@+id/et_temp_max"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
                 android:lines="1"
-                android:inputType="text"
+                android:inputType="numberDecimal|numberSigned"
                 android:background="@null"
                 android:numeric="integer" />
 
             <ImageView
-                android:id="@+id/iv_camera"
+                android:id="@+id/iv_send_camera"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:padding="10dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/icon_camera" />
+                android:src="@drawable/icon_oc" />
+
         </LinearLayout>
 
         <View
@@ -88,82 +87,40 @@
                 style="@style/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="快递单号" />
+                android:text="下限温度" />
 
             <EditText
-                android:id="@+id/et_send_id"
+                android:id="@+id/et_temp_min"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
-                android:inputType="text"
+                android:inputType="numberDecimal|numberSigned"
                 android:background="@null" />
 
             <ImageView
-                android:id="@+id/iv_send_camera"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
                 android:padding="10dp"
                 android:scaleType="fitXY"
-                android:src="@drawable/icon_camera" />
+                android:src="@drawable/icon_oc" />
+
         </LinearLayout>
 
     </LinearLayout>
 
     <TextView
-        android:id="@+id/tv_temp_txt"
-        style="@style/msg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ll_first"
-        android:layout_marginTop="15dp"
-        android:text="设置安全温度范围" />
-
-    <RelativeLayout
-        android:id="@+id/rl_temp"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_below="@+id/tv_temp_txt"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="5dp"
-        android:background="@drawable/common_back_shape"
-        android:gravity="center_vertical"
-        android:padding="10dp">
-
-
-        <TextView
-            style="@style/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="安全温度" />
-
-        <TextView
-            android:id="@+id/tv_temp"
-            style="@style/title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:drawablePadding="5dp"
-            android:drawableRight="@drawable/arrow_list"
-            android:text="18.0 - 28.0 °C" />
-
-
-    </RelativeLayout>
-
-    <TextView
         android:id="@+id/tv_finish"
         android:layout_width="280dp"
-        android:layout_height="38dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="40dp"
         android:background="@drawable/common_btn_shape"
         android:gravity="center"
-        android:text="完成"
+        android:text="确定"
         android:textColor="#FFFFFF"
-        android:textSize="14dp" />
+        android:textSize="16dp" />
 
 
-</RelativeLayout>
+</LinearLayout>
