@@ -42,7 +42,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         rl_selete_role.setOnClickListener(this);
 
 
-
     }
 
     @Override
@@ -56,6 +55,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         if (v == rl_selete_role) {
             Intent intent = new Intent(this, SelectRoleActivity.class);
             startActivity(intent);
+            finish();
         }
     }
 }

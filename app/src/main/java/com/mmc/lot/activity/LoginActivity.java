@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.RegisterBean;
 import com.mmc.lot.net.Repository;
+import com.mmc.lot.util.SharePreUtils;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -50,6 +51,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         ivSet.setVisibility(View.GONE);
 
         etNickName = (EditText) findViewById(R.id.et_nickname);
+        String nickName = SharePreUtils.getInstance().getString(SharePreUtils.USER_NAME, "");
+        if (!TextUtils.isEmpty(nickName)) {
+            etNickName.setText(nickName);
+        }
         etNum = (EditText) findViewById(R.id.et_num);
         tvLogin = (TextView) findViewById(R.id.tv_finish);
         tvLogin.setOnClickListener(this);
@@ -73,8 +78,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     @Override
                     public void onNext(RegisterBean registerBean) {
                         Log.d("zzdebug", "" + registerBean.toString());
-                        if (registerBean != null ) {
+                        if (registerBean != null) {
                             if (registerBean.getC() == 1) {
+                                SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, registerBean.getO());
+                                SharePreUtils.getInstance().setString(SharePreUtils.USER_NAME, etNickName.getText().toString());
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
