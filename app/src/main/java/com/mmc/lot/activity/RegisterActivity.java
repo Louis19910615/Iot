@@ -167,20 +167,26 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     }
 
                     @Override
-                    public void onNext(RegisterBean registerBean) {
+                    public void onNext(final RegisterBean registerBean) {
                         Log.d("zzdebug", "registerBean：" + registerBean.toString());
                         if (registerBean != null) {
                             if (registerBean.getC() == 1) {
-                                SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, registerBean.getO());
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         Toast.makeText(RegisterActivity.this, "注册成功", Toast.LENGTH_SHORT).show();
                                     }
                                 });
-                                Intent intent = new Intent(RegisterActivity.this, SettingActivity.class);
+                                Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                 startActivity(intent);
                                 finish();
+                            } else {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(RegisterActivity.this, registerBean.getM(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                         }
                     }
