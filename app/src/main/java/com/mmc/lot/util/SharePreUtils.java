@@ -16,6 +16,7 @@ public class SharePreUtils {
     private SharedPreferences.Editor editor;
     public static final String PREFERENCE_FILE_NAME = "iot_sp";
     public static final String USER_TOKEN = "user_token";
+    public static final String USER_NAME = "user_name";
 
 
     private SharePreUtils() {
