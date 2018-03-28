@@ -23,6 +23,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
+import com.mmc.lot.activity.SendDetailActivity;
+import com.mmc.lot.activity.SettingActivity;
+import com.mmc.lot.ble.ServiceUuidConstant;
+import com.mmc.lot.util.CrcUtil;
+import com.mmc.lot.util.DataTransfer;
+import com.mmc.lot.util.DateParseUtil;
+import com.mmc.lot.util.PrintHexBinary;
+import com.orhanobut.logger.Logger;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import com.mmc.lot.R;
 import com.uuzuche.lib_zxing.activity.CaptureActivity;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
@@ -46,6 +64,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         mBluetoothUtils = BluetoothUtils.getInstance(this);
 //        bleTest();
+        Log.e(TAG, "你好大北京");
+        try {
+            byte[] bytes = new String("你好大北京").getBytes("UTF8");
+            String str = new String(bytes, "UTF8");
+            Log.e(TAG, "str is " + str);
+            Byte temp = Byte.valueOf("20");
+            Log.e(TAG, "temp is " + String.valueOf(temp));
+            byte[] bytes1 = new byte[]{0x09, (byte) 0xFA};
+            Log.e(TAG, "equal is " + (bytes1[1] == (byte) 0xFA));
+            byte[] bytes2 = new byte[] {(byte) 0xFA, (byte) 0xFE};
+            int bytes20 = (bytes2[0] & 0xff);
+            int bytes21 = (bytes2[1] & 0xff);
+            int bytes22 = (bytes21 | bytes20 << 8) & 0xffff;
+            Log.e(TAG, "bytes22 is " + bytes2[0] + ", " + bytes2[1] + bytes22);
+
+            byte[] bytes3 = DataTransfer.short2byte((short) -254);
+            Log.e(TAG, "bytes3 is " + bytes3[0] + ", " + bytes3[1]);
+            int bytes4 = DataTransfer.byte2short(bytes3);
+            Log.e(TAG, "bytes4 is " + bytes4);
+
+            byte[] data = new byte[]{0x01, 0x07, 0x14, 0x12, 0x03, 0x0c, 0x14, 0x08, 0x1e};
+            byte check = CrcUtil.calCrc8(data);
+            byte[] checks = new byte[1];
+            checks[0]= check;
+            PrintHexBinary.print(checks);
+            byte[] date = DateParseUtil.format(System.currentTimeMillis());
+            PrintHexBinary.print(date);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void initView() {

@@ -13,7 +13,11 @@ import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.ble.ServiceUuidConstant;
+import com.mmc.lot.eventbus.AnalysisEvent;
 import com.mmc.lot.eventbus.EnableEvent;
+import com.mmc.lot.util.CrcUtil;
+import com.mmc.lot.util.DataTransfer;
+import com.mmc.lot.util.DateParseUtil;
 import com.orhanobut.logger.Logger;
 
 import org.greenrobot.eventbus.EventBus;
@@ -31,18 +35,35 @@ import static com.mmc.lot.ble.ServiceUuidConstant.IOT_SERVICE_UUID;
 public class ConnectOne {
 
     private static final String TAG = ConnectOne.class.getSimpleName();
+    private volatile static ConnectOne sInstance;
+    private BluetoothConnectManager connectManager;
 
-    private static BluetoothConnectManager connectManager;
+    private ConnectOne () {
+        init();
+    }
 
-    private static void init() {
+    public static ConnectOne getInstance() {
+        if (sInstance == null) {
+            synchronized (ConnectOne.class) {
+                if (sInstance == null) {
+                    sInstance = new ConnectOne();
+                }
+            }
+        }
+
+        return sInstance;
+    }
+
+    private void init() {
+
+        EventBus.getDefault().register(this);
         if (connectManager == null) {
             connectManager = BluetoothConnectManager.getInstance(IotApplication.getContext());
         }
+
     }
 
-    public static void connect(String deviceAddress) {
-
-        init();
+    public void connect(String deviceAddress) {
 
         ConnectStateListener stateListener = new ConnectStateListener() {
             @Override
@@ -88,6 +109,8 @@ public class ConnectOne {
                 super.onCharacteristicChanged(gatt, characteristic);
                 // TODO EVentbus 上报数据
                 Logger.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
+                EventBus.getDefault().post(new AnalysisEvent(characteristic.getValue()));
+
             }
 
             @Override
@@ -110,12 +133,12 @@ public class ConnectOne {
         connectManager.connect(deviceAddress);
     }
 
-    public static void disconnect(String deviceAddress) {
+    public void disconnect(String deviceAddress) {
         connectManager.disconnect(deviceAddress);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public static boolean enableNotify(EnableEvent enableEvent) {
+    public boolean enableNotify(EnableEvent enableEvent) {
         BluetoothGatt gatt = connectManager.getBluetoothGatt(enableEvent.getDeviceAddress());
         if (gatt == null) {
             connectManager.disconnect(enableEvent.getDeviceAddress());
@@ -142,7 +165,89 @@ public class ConnectOne {
         return false;
     }
 
-    public static boolean write(String deviceAddress, byte[] bytes) {
+    // 同步时间
+    public boolean syncTime(String deviceAddress, long time) {
+        byte[] dateTime = DateParseUtil.format(time);
+
+        byte[] data = new byte[10];
+        data[0] = 0x01;
+        data[1] = 0x07;
+        for (int i = 0; i < dateTime.length; i++) {
+            data[i + 2] = dateTime[i];
+        }
+
+        data[10] = CrcUtil.calcCrc8(data);
+
+        return write(deviceAddress, data);
+    }
+
+    // 获取信息
+    public boolean getMessage(String deviceAddress) {
+        byte[] data = new byte[]{0x02, 0x00, 0x02};
+        return write(deviceAddress, data);
+    }
+
+    // 上传温度数据
+    public boolean uploadTemperatures(String deviceAddress, boolean isFirst) {
+        if (isFirst) {
+            byte[] data = new byte[]{0x03, 0x00, 0x03};
+            return write(deviceAddress, data);
+        } else {
+            byte[] data = new byte[]{0x13, 0x00, 0x13};
+            return write(deviceAddress, data);
+        }
+    }
+
+    // 查询温度记录间隔
+    public boolean queryInterval(String deviceAddress) {
+        byte[] data = new byte[]{0x04, 0x00, 0x04};
+        return write(deviceAddress, data);
+    }
+
+    // 设置温度记录间隔
+    public boolean setInterval(String deviceAddress, int min) {
+        byte[] minByte = DataTransfer.short2byte((short) min);
+        byte[] data = new byte[5];
+        data[0] = 0x05;
+        data[1] = 0x02;
+        data[2] = minByte[0];
+        data[3] = minByte[1];
+        data[4] = CrcUtil.calCrc8(data);
+
+        return write(deviceAddress, data);
+    }
+
+    // 保存货单信息 data固定 = 14
+    public boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
+
+        byte[] data = new byte[19];
+        if (directiveFlag == 0x00) {
+            data[0] = 0x06;
+        } else {
+            data[0] = (byte) (0x06 & directiveFlag);
+        }
+
+        data[1] = 0x11;
+        byte[] offsetByte = DataTransfer.short2byte((short) offset);
+        data[2] = offsetByte[0];
+        data[3] = offsetByte[1];
+
+        for (int i = 0; i < 14; i++) {
+            if (res.length > i) {
+                data[i + 3] = res[i];
+            } else {
+                data[i + 3] = (byte) 0xff;
+            }
+        }
+
+        data[18] = CrcUtil.calCrc8(data);
+
+        return write(deviceAddress, data);
+    }
+
+    //
+
+    public boolean write(String deviceAddress, byte[] bytes) {
         BluetoothGatt gatt = connectManager.getBluetoothGatt(deviceAddress);
         if (gatt == null) {
             return false;

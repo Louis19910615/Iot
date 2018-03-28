@@ -20,7 +20,6 @@ public class IotApplication extends Application {
     public void onCreate() {
         super.onCreate();
         context = this;
-//        EventBus.getDefault().register(this);
         ZXingLibrary.initDisplayOpinion(this);
         init();
     }
