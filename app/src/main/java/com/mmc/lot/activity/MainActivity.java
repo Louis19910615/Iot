@@ -24,6 +24,8 @@ import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
 import com.mmc.lot.R;
+import com.uuzuche.lib_zxing.activity.CaptureActivity;
+import com.uuzuche.lib_zxing.activity.CodeUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -140,6 +142,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (v == rlTemp) {
             Intent intent = new Intent(this, TempActivity.class);
             startActivityForResult(intent, 201);
+        } else if (v == ivCamera) {
+            Intent intent = new Intent(this, ZxingActivity.class);
+            startActivityForResult(intent, 202);
+        } else if (v == ivMsgCamera) {
+            Intent intent = new Intent(this, ZxingActivity.class);
+            startActivityForResult(intent, 203);
         }
     }
 
@@ -158,19 +166,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults)
-    {
-        if (requestCode == 10001)
-        {
+                                           @NonNull int[] grantResults) {
+        if (requestCode == 10001) {
             if (grantResults == null || grantResults.length == 0) {
                 return;
             }
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-            {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "已获取位置权限", Toast.LENGTH_LONG).show();
-            }
-            else
-            {
+            } else {
                 gotoOpenPermission();
             }
         }
@@ -178,8 +181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onActivityResult(final int requestCode, int resultCode, final Intent data)
-    {
+    protected void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         Log.e("MainActivity", "requestCode:" + requestCode + ", resultCode:" + resultCode);
         if (requestCode == 12) {
             if (isGpsProviderEnabled(this)) {
@@ -199,6 +201,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String temp = data.getStringExtra("max_min");
                 tvTemp.setText(temp);
             }
+        } else if (requestCode == 202) {
+            //处理扫描结果（在界面上显示）
+            if (null != data) {
+                Bundle bundle = data.getExtras();
+                if (bundle == null) {
+                    return;
+                }
+                if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_SUCCESS) {
+                    String result = bundle.getString(CodeUtils.RESULT_STRING);
+                    etID.setText(result);
+                    etID.setSelection(result.length());
+                    Toast.makeText(this, "解析结果:" + result, Toast.LENGTH_LONG).show();
+                } else if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_FAILED) {
+                    Toast.makeText(MainActivity.this, "解析二维码失败", Toast.LENGTH_LONG).show();
+                }
+            }
+        } else if (requestCode == 203) {
+            //处理扫描结果（在界面上显示）
+            if (null != data) {
+                Bundle bundle = data.getExtras();
+                if (bundle == null) {
+                    return;
+                }
+                if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_SUCCESS) {
+                    String result = bundle.getString(CodeUtils.RESULT_STRING);
+                    etMsgID.setText(result);
+                    etMsgID.setSelection(result.length());
+                    Toast.makeText(this, "解析结果:" + result, Toast.LENGTH_LONG).show();
+                } else if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_FAILED) {
+                    Toast.makeText(MainActivity.this, "解析二维码失败", Toast.LENGTH_LONG).show();
+                }
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -217,28 +251,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void gotoOpenPermission()
-    {
+    private void gotoOpenPermission() {
         Toast.makeText(this, "请在设置界面打开位置权限", Toast.LENGTH_LONG).show();
     }
 
-    public static boolean isGpsProviderEnabled(Context context){
+    public static boolean isGpsProviderEnabled(Context context) {
         LocationManager service = (LocationManager) context.getSystemService(context.LOCATION_SERVICE);
         return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
-    private boolean checkIsBleState(){
-        if (!BluetoothUtils.isBluetoothLeSupported(this)){
+    private boolean checkIsBleState() {
+        if (!BluetoothUtils.isBluetoothLeSupported(this)) {
             Toast.makeText(this, "此设备不支持蓝牙", Toast.LENGTH_LONG).show();
-        }else if(!mBluetoothUtils.isBluetoothIsEnable()){
+        } else if (!mBluetoothUtils.isBluetoothIsEnable()) {
             mBluetoothUtils.askUserToEnableBluetoothIfNeeded(this);
-        }else{
+        } else {
             return true;
         }
         return false;
     }
 
-    public static void startLocationSettings(Activity context, int requestCode){
+    public static void startLocationSettings(Activity context, int requestCode) {
         Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
         context.startActivityForResult(enableLocationIntent, requestCode);
     }

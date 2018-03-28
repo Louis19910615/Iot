@@ -3,6 +3,8 @@ package com.mmc.lot;
 import android.app.Application;
 import android.content.Context;
 
+import com.uuzuche.lib_zxing.activity.ZXingLibrary;
+
 import org.greenrobot.eventbus.EventBus;
 
 /**
@@ -18,7 +20,8 @@ public class IotApplication extends Application {
     public void onCreate() {
         super.onCreate();
         context = this;
-        EventBus.getDefault().register(this);
+//        EventBus.getDefault().register(this);
+        ZXingLibrary.initDisplayOpinion(this);
         init();
     }
 

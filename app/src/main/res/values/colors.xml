@@ -6,4 +6,5 @@
     <color name="backGround">#EBECED</color>
     <color name="white">#FFFFFF</color>
 
+    <color name="scan_corner_color">#0effc2</color>
 </resources>
