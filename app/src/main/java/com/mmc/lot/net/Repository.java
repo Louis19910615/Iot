@@ -1,10 +1,16 @@
 package com.mmc.lot.net;
 
-import com.mmc.lot.bean.AppConfigBean;
-import com.mmc.lot.bean.RegisterBean;
-import com.mmc.lot.fastjson.FastJsonConverterFactory;
+import com.google.gson.Gson;
+import com.mmc.lot.bean.BindBean;
+import com.mmc.lot.bean.FormBean;
+import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.TagBean;
+import com.mmc.lot.bean.TempBean;
+import com.mmc.lot.util.SharePreUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +73,7 @@ public class Repository {
     /**
      * 注册接口
      */
-    public Observable<RegisterBean> register(String username, String phone, String password, String usertype) {
+    public Observable<BaseBean> register(String username, String phone, String password, String usertype) {
         Map<String, String> map = new HashMap<>();
         map.put("username", username);
         map.put("phone", phone);
@@ -80,11 +86,120 @@ public class Repository {
     /**
      * 登录接口
      */
-    public Observable<RegisterBean> login(String username, String password) {
+    public Observable<BaseBean> login(String username, String password) {
         Map<String, String> map = new HashMap<>();
         map.put("username", username);
         map.put("password", password);
         map.put("time", String.valueOf(System.currentTimeMillis() / 1000));
         return apiService.login(map);
+    }
+
+    /**
+     * 获取温度
+     *
+     * @return
+     */
+    public Observable<TempBean> getTemp() {
+        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+        return apiService.getTempData(token);
+    }
+
+    /**
+     * 获取物流信息
+     *
+     * @return
+     */
+    public Observable<BaseBean> getTransData() {
+        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+        return apiService.getTransData(token);
+    }
+
+    /**
+     * "tagID": "aabbccddeeff",
+     * "mac": "00:11:22:33:44:55",
+     * "startTime": "2018/03/04 15:00:00",
+     * "intervalTime": 1,
+     * "energy": 100,
+     * "gps": "123,789"
+     *
+     * @return
+     */
+    public Observable<BaseBean> sendTagData() {
+
+        Gson gson = new Gson();
+
+        TagBean bean = new TagBean();
+        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+
+        TagBean.TagInformationBean infoBean = new TagBean.TagInformationBean();
+        infoBean.setMac("00:11:22:33:44:55");
+        infoBean.setEnergy(100);
+        infoBean.setGps("123,789");
+        infoBean.setIntervalTime(1);
+        infoBean.setStartTime("2018/03/04 15:00:00");
+        infoBean.setTagID("aabbccddeeff");
+        List<Double> temp = new ArrayList<Double>() {
+        };
+        temp.add(30.11);
+        temp.add(-20.31);
+        bean.setTagData(temp);
+
+        bean.setTagInformation(infoBean);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("key", gson.toJson(bean));
+
+        return apiService.sendData(map);
+    }
+
+    public Observable<BaseBean> sendFormData() {
+        Map<String, String> map = new HashMap<>();
+        FormBean bean = new FormBean();
+        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+
+        FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
+        transBean.setLogisticsCompany("顺丰速运");
+        FormBean.TransportInformationBean.ConsigneeBean consignee = new FormBean.TransportInformationBean.ConsigneeBean("中国医药集团", "北京市海淀区知春路20号", "8613800138000");
+        transBean.setConsignee(consignee);
+        FormBean.TransportInformationBean.ConsignorBean consignor = new FormBean.TransportInformationBean.ConsignorBean("深圳市人民医院", "广东省深圳市罗湖区东门北路1017号", "8613811138111");
+        transBean.setConsignor(consignor);
+        FormBean.TransportInformationBean.ProductBean productBean = new FormBean.TransportInformationBean.ProductBean("中国医药集团", "流感疫苗");
+        transBean.setProduct(productBean);
+
+        FormBean.TransportInformationBean.ValidRangeBean validRangeBean = new FormBean.TransportInformationBean.ValidRangeBean(-30, 60);
+        transBean.setValidRange(validRangeBean);
+
+        FormBean.TagInformationBean tagInformationBean = new FormBean.TagInformationBean();
+        tagInformationBean.setMac("00:11:22:33:44:55");
+        tagInformationBean.setTagID("aabbccddeeff");
+        tagInformationBean.setEnergy(100);
+        tagInformationBean.setIntervalTime(1);
+        tagInformationBean.setGps("123,789");
+        tagInformationBean.setCategory("bluetooth");
+        tagInformationBean.setDescription("record temperature");
+
+        bean.setTransportInformation(transBean);
+        bean.setTagInformation(tagInformationBean);
+        map.put("key", new Gson().toJson(bean));
+
+        return apiService.formData(map);
+    }
+
+    /**
+     * 绑定tag
+     * @return
+     */
+    public Observable<BaseBean> bindData() {
+        Map<String, String> map = new HashMap<>();
+        BindBean bean = new BindBean();
+        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+        BindBean.TransportInformationBean transBean = new BindBean.TransportInformationBean("123456789abcd");
+
+        bean.setTransportInformation(transBean);
+        BindBean.TagInformationBean tagBean = new BindBean.TagInformationBean("aabbccddeeff");
+        bean.setTagInformation(tagBean);
+        map.put("key", new Gson().toJson(bean));
+
+        return apiService.bindData(map);
     }
 }

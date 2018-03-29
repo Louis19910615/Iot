@@ -4,7 +4,7 @@ package com.mmc.lot.bean;
  * Created by zhangzd on 2018/3/24.
  */
 
-public class RegisterBean {
+public class BaseBean {
 
     private int c;
     private String m;
@@ -46,7 +46,7 @@ public class RegisterBean {
 
     @Override
     public String toString() {
-        return "RegisterBean{" +
+        return "BaseBean{" +
                 "c=" + c +
                 ", m='" + m + '\'' +
                 ", o='" + o + '\'' +
