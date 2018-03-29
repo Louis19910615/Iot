@@ -16,13 +16,14 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
-import com.mmc.lot.bean.RegisterBean;
+import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.AccountValidatorUtil;
-import com.mmc.lot.util.SharePreUtils;
 
 import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -159,24 +160,20 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 etNickName.getText().toString(),
                 userType)
                 .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(new Observer<RegisterBean>() {
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BaseBean>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(final RegisterBean registerBean) {
-                        Log.d("zzdebug", "registerBean：" + registerBean.toString());
-                        if (registerBean != null) {
-                            if (registerBean.getC() == 1) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(RegisterActivity.this, "注册成功", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
+                    public void onNext(final BaseBean baseBean) {
+                        Log.d("zzdebug", "baseBean：" + baseBean.toString());
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Toast.makeText(IotApplication.getContext(), "注册成功", Toast.LENGTH_SHORT).show();
+
                                 Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                 startActivity(intent);
                                 finish();
@@ -184,7 +181,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(RegisterActivity.this, registerBean.getM(), Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(RegisterActivity.this, baseBean.getM(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
@@ -194,12 +191,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                     @Override
                     public void onError(Throwable e) {
                         Log.d("zzdebug", "error:" + e.getMessage());
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(RegisterActivity.this, "注册失败", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        Toast.makeText(IotApplication.getContext(), "注册失败", Toast.LENGTH_SHORT).show();
+
 
                     }
 

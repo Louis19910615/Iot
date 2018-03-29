@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -23,27 +24,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
-import com.mmc.lot.activity.SendDetailActivity;
-import com.mmc.lot.activity.SettingActivity;
-import com.mmc.lot.ble.ServiceUuidConstant;
+import com.mmc.lot.R;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
 import com.mmc.lot.util.PrintHexBinary;
-import com.orhanobut.logger.Logger;
+import com.uuzuche.lib_zxing.activity.CodeUtils;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import com.mmc.lot.R;
-import com.uuzuche.lib_zxing.activity.CaptureActivity;
-import com.uuzuche.lib_zxing.activity.CodeUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -106,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ivSet = (ImageView) findViewById(R.id.iv_set);
         ivSet.setVisibility(View.VISIBLE);
+        ivSet.setOnClickListener(this);
 
 
         ivCamera = (ImageView) findViewById(R.id.iv_camera);
@@ -180,6 +169,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if (v == tvFinish) {
+            if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
+                Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent intent = new Intent(this, SendDetailActivity.class);
             intent.putExtra("mac", etID.getText().toString());
             intent.putExtra("orderId", etMsgID.getText().toString());

@@ -1,18 +1,14 @@
 package com.mmc.lot.net;
 
-import com.mmc.lot.bean.AppConfigBean;
-import com.mmc.lot.bean.RegisterBean;
+import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.TempBean;
 
 import java.util.Map;
 
 import io.reactivex.Observable;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.http.Body;
+import retrofit2.http.Field;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
-import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
 /**
@@ -21,22 +17,62 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @GET("https://api.iclient.ifeng.com/BashoVideoClientConfig")
-    Observable<AppConfigBean> getConfig();
-
+    /**
+     * 注册接口
+     * @param params
+     * @return
+     */
     @FormUrlEncoded
     @POST("https://ts.longsys.com/apresys/api/user/register")
-    Observable<RegisterBean> register(@FieldMap Map<String, String> params);
+    Observable<BaseBean> register(@FieldMap Map<String, String> params);
 
+    /**
+     * 登录
+     * @param params
+     * @return
+     */
     @FormUrlEncoded
     @POST("https://ts.longsys.com/apresys/api/user/login")
-    Observable<RegisterBean> login(@FieldMap Map<String, String> params);
+    Observable<BaseBean> login(@FieldMap Map<String, String> params);
 
-    @Headers({"Content-type:application/json;charset=UTF-8"})
+    /**
+     * 数据上传
+     */
+    @FormUrlEncoded
     @POST("http://ts.longsys.com/apresys/api/info/uptagtempinfo")
-    Call<ResponseBody> sendData(@Body ResponseBody body);
+    Observable<BaseBean> sendData(@FieldMap Map<String, String>  params);
 
-    
 
+    /**
+     * 获取温度
+     */
+    @FormUrlEncoded
+    @POST("http://ts.longsys.com/apresys/api/info/gettagtempinfo")
+    Observable<TempBean>  getTempData(@Field("token") String  token );
+
+    /**
+     * 获取物流信息接口
+     * @param token
+     * @return
+     */
+    @FormUrlEncoded
+    @POST("http://ts.longsys.com/apresys/api/info/gettransinfo")
+    Observable<BaseBean>  getTransData(@Field("token") String  token );
+
+    /**
+     * 表单上传接口
+     * @param params
+     * @return
+     */
+    @FormUrlEncoded
+    @POST("http://ts.longsys.com/apresys/api/info/uptransinfo")
+    Observable<BaseBean> formData(@FieldMap Map<String, String>  params);
+
+    /**
+     * 绑定接口
+     */
+    @FormUrlEncoded
+    @POST("http://ts.longsys.com/apresys/api/info/retrans")
+    Observable<BaseBean> bindData(@FieldMap Map<String, String> params);
 
 }
