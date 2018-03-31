@@ -24,6 +24,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import static com.mmc.lot.ble.ServiceUuidConstant.IOT_SERVICE_UUID;
@@ -218,7 +219,36 @@ public class ConnectOne {
     }
 
     // 保存货单信息 data固定 = 14
-    public boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
+    public boolean saveManifest(String deviceAddress, String res) {
+        // string --> byte[]
+        try {
+            byte[] resBytes = res.getBytes("UTF8");
+            byte[] resByteOne = new byte[14];
+            byte flag = 0x20;
+
+            for (int i = 0; i < resBytes.length; i = i * 14) {
+                Arrays.fill(resByteOne, (byte) 0xff);
+                for (int j = 0; j < 14; j++) {
+                    if (i + j < resBytes.length) {
+                        resByteOne[j] = resBytes[i + j];
+                    } else {
+                        flag = 0x00;
+                        break;
+                    }
+                }
+                saveManifest(deviceAddress, resByteOne, flag, i);
+                i++;
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    // 保存货单信息 data固定 = 14 单次
+    private boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
 
         byte[] data = new byte[19];
         if (directiveFlag == 0x00) {
@@ -245,7 +275,33 @@ public class ConnectOne {
         return write(deviceAddress, data);
     }
 
-    //
+    // 读取货单信息
+    public boolean readManifest(String deviceAddress, boolean isFirst) {
+        byte[] data = new byte[3];
+        if (isFirst) {
+            data[0] = 0x07;
+            data[1] = 0x00;
+            data[2] = 0x07;
+        } else {
+            data[0] = 0x17;
+            data[1] = 0x00;
+            data[2] = 0x17;
+        }
+        return write(deviceAddress, data);
+    }
+
+    // 服务器确认
+    public boolean activate(String deviceAddress) {
+        byte[] data = new byte[]{0x08, 0x00, 0x08};
+        return write(deviceAddress, data);
+
+    }
+
+    // 重置Tag
+    public boolean resetTag(String deviceAddress) {
+        byte[] data = new byte[]{0x09, 0x00, 0x09};
+        return write(deviceAddress, data);
+    }
 
     public boolean write(String deviceAddress, byte[] bytes) {
         BluetoothGatt gatt = connectManager.getBluetoothGatt(deviceAddress);

@@ -17,4 +17,8 @@ public class DataTransfer {
         targets[1] = (byte) (0x00ff & res);
         return targets;
     }
+
+    public static int byte2int(byte res) {
+        return (res & 0xff);
+    }
 }
