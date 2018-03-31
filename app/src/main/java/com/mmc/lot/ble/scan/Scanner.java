@@ -7,7 +7,13 @@ import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.eventbus.ConnectEvent;
+import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.orhanobut.logger.Logger;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.List;
 
@@ -30,15 +36,17 @@ public class Scanner {
     }
 
     // name example: tModul
-    public void scanWithName(String name) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void scanWithName(ScanWithNameEvent scanWithNameEvent) {
         scanManager.addScanFilterCompats(new ScanFilterCompat.Builder()
-                .setDeviceName(name).build());
+                .setDeviceName(scanWithNameEvent.getDeviceName()).build());
         scan();
     }
 
     public void scan() {
 
-        init();
+        // reset scanResultCompat
+        scanResultCompat = null;
 
         scanManager.setScanOverListener(new ScanOverListener() {
             @Override
@@ -53,11 +61,10 @@ public class Scanner {
                 scanManager.stopCycleScan();
                 Logger.i(TAG, "scan device is " + result.getScanRecord().getDeviceName()
                         + " : " + result.getLeDevice().getAddress());
-                if (scanResultCompat == null || !(result.getLeDevice().getAddress()
-                        .equals(scanResultCompat.getLeDevice().getAddress()))) {
+                if (scanResultCompat == null) {
                     scanResultCompat = result;
                 }
-                // TODO EventBus 传递给connect Address
+                EventBus.getDefault().post(new ConnectEvent(result.getLeDevice().getAddress()));
             }
 
             @Override
@@ -85,7 +92,26 @@ public class Scanner {
 
     private static void init() {
         if (scanManager == null) {
-            BleManager.getScanManager(IotApplication.getContext());
+            scanManager = BleManager.getScanManager(IotApplication.getContext());
         }
+    }
+
+    private static Scanner sInstance;
+
+    private Scanner () {
+        init();
+    }
+
+    public static Scanner getInstance() {
+        if (sInstance == null) {
+            synchronized (Scanner.class) {
+                if (sInstance == null) {
+                    sInstance = new Scanner();
+                    EventBus.getDefault().register(sInstance);
+                }
+            }
+        }
+
+        return sInstance;
     }
 }

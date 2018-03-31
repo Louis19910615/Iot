@@ -2,10 +2,13 @@ package com.mmc.lot.activity;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -27,14 +30,26 @@ import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.TransBean;
+import com.mmc.lot.ble.analysis.Analysis;
+import com.mmc.lot.ble.connect.ConnectOne;
+import com.mmc.lot.ble.device.DeviceInfo;
+import com.mmc.lot.ble.receiver.BleActionStateChangedReceiver;
+import com.mmc.lot.ble.scan.Scanner;
+import com.mmc.lot.eventbus.BleStateOnEvent;
+import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
 import com.mmc.lot.util.IntentUtils;
+import com.mmc.lot.util.PermissionConstant;
 import com.mmc.lot.util.PrintHexBinary;
 import com.mmc.lot.util.SharePreUtils;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.UnsupportedEncodingException;
 
@@ -61,38 +76,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         initView();
+        EventBus.getDefault().register(this);
         mBluetoothUtils = BluetoothUtils.getInstance(this);
-//        bleTest();
-        Log.e(TAG, "你好大北京");
-        try {
-            byte[] bytes = new String("你好大北京").getBytes("UTF8");
-            String str = new String(bytes, "UTF8");
-            Log.e(TAG, "str is " + str);
-            Byte temp = Byte.valueOf("20");
-            Log.e(TAG, "temp is " + String.valueOf(temp));
-            byte[] bytes1 = new byte[]{0x09, (byte) 0xFA};
-            Log.e(TAG, "equal is " + (bytes1[1] == (byte) 0xFA));
-            byte[] bytes2 = new byte[]{(byte) 0xFA, (byte) 0xFE};
-            int bytes20 = (bytes2[0] & 0xff);
-            int bytes21 = (bytes2[1] & 0xff);
-            int bytes22 = (bytes21 | bytes20 << 8) & 0xffff;
-            Log.e(TAG, "bytes22 is " + bytes2[0] + ", " + bytes2[1] + bytes22);
 
-            byte[] bytes3 = DataTransfer.short2byte((short) -254);
-            Log.e(TAG, "bytes3 is " + bytes3[0] + ", " + bytes3[1]);
-            int bytes4 = DataTransfer.byte2short(bytes3);
-            Log.e(TAG, "bytes4 is " + bytes4);
-
-            byte[] data = new byte[]{0x01, 0x07, 0x14, 0x12, 0x03, 0x0c, 0x14, 0x08, 0x1e};
-            byte check = CrcUtil.calCrc8(data);
-            byte[] checks = new byte[1];
-            checks[0] = check;
-            PrintHexBinary.print(checks);
-            byte[] date = DateParseUtil.format(System.currentTimeMillis());
-            PrintHexBinary.print(date);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+//        Log.e(TAG, "你好大北京");
+//        try {
+//            byte[] bytes = new String("你好大北京").getBytes("UTF8");
+//            String str = new String(bytes, "UTF8");
+//            Log.e(TAG, "str is " + str);
+//            Byte temp = Byte.valueOf("20");
+//            Log.e(TAG, "temp is " + String.valueOf(temp));
+//            byte[] bytes1 = new byte[]{0x09, (byte) 0xFA};
+//            Log.e(TAG, "equal is " + (bytes1[1] == (byte) 0xFA));
+//            byte[] bytes2 = new byte[]{(byte) 0xFA, (byte) 0xFE};
+//            int bytes20 = (bytes2[0] & 0xff);
+//            int bytes21 = (bytes2[1] & 0xff);
+//            int bytes22 = (bytes21 | bytes20 << 8) & 0xffff;
+//            Log.e(TAG, "bytes22 is " + bytes2[0] + ", " + bytes2[1] + bytes22);
+//
+//            byte[] bytes3 = DataTransfer.short2byte((short) -254);
+//            Log.e(TAG, "bytes3 is " + bytes3[0] + ", " + bytes3[1]);
+//            int bytes4 = DataTransfer.byte2short(bytes3);
+//            Log.e(TAG, "bytes4 is " + bytes4);
+//
+//            byte[] data = new byte[]{0x01, 0x07, 0x14, 0x12, 0x03, 0x0c, 0x14, 0x08, 0x1e};
+//            byte check = CrcUtil.calCrc8(data);
+//            byte[] checks = new byte[1];
+//            checks[0] = check;
+//            PrintHexBinary.print(checks);
+//            byte[] date = DateParseUtil.format(System.currentTimeMillis());
+//            PrintHexBinary.print(date);
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -352,30 +368,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-
-    private void bleTest() {
+    private boolean startCheckPermission() {
         if (checkLocationPermission()) {
             if (isGpsProviderEnabled(this)) {
-                checkIsBleState();
+                if (checkIsBleState()) {
+                    EventBus.getDefault().post(new BleStateOnEvent());
+                    return true;
+                } else {
+                    enableBluetooth();
+                    registerBleActionReceiver(this);
+                    return false;
+                }
             } else {
-                startLocationSettings(this, 12);
+                startLocationSettings(this, PermissionConstant.LOCATION_SETTING_REQUESTCODE);
+                return false;
             }
         } else {
             requestLocationPermissions();
+            return false;
+        }
+    }
+
+    private boolean isBleStateOn = false;
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    private void bleStateOn(BleStateOnEvent bleStateOnEvent) {
+        if (!isBleStateOn) {
+            // init scanner
+            Scanner.getInstance();
+            // init connect one
+            ConnectOne.getInstance();
+            // init analysis
+            Analysis.getInstance();
+            // post to scan
+            EventBus.getDefault().post(new ScanWithNameEvent(DeviceInfo.getInstance().getDeviceName()));
+
+            isBleStateOn = true;
+            unregisterBleActionReceiver(this);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == 10001) {
+        if (requestCode == PermissionConstant.LOCATION_PERMISSIN_REQUESTCODE) {
             if (grantResults == null || grantResults.length == 0) {
                 return;
             }
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "已获取位置权限", Toast.LENGTH_LONG).show();
+                startCheckPermission();
             } else {
-                gotoOpenPermission();
+                Toast.makeText(this, "请在设置界面打开位置权限", Toast.LENGTH_LONG).show();
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -384,16 +428,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         Log.e("MainActivity", "requestCode:" + requestCode + ", resultCode:" + resultCode);
-        if (requestCode == 12) {
+        if (requestCode == PermissionConstant.LOCATION_SETTING_REQUESTCODE) {
             if (isGpsProviderEnabled(this)) {
                 Toast.makeText(this, "已打开定位", Toast.LENGTH_LONG).show();
-                checkIsBleState();
+                startCheckPermission();
             } else {
                 Toast.makeText(this, "已拒绝打开定位", Toast.LENGTH_LONG).show();
             }
-        } else if (requestCode == 2001) {
+        } else if (requestCode == PermissionConstant.ENABLE_BLUETOOTH_REQUESTCODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Toast.makeText(this, "已打开蓝牙", Toast.LENGTH_LONG).show();
+                startCheckPermission();
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Toast.makeText(this, "已拒绝打开蓝牙", Toast.LENGTH_LONG).show();
             }
@@ -440,7 +485,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private boolean checkLocationPermission() {
-        return checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (Build.VERSION.SDK_INT >= 23) {
+            return checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) || checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        return true;
     }
 
     private boolean checkPermission(final String permission) {
@@ -448,12 +497,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void requestLocationPermissions() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 10001);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, PermissionConstant.LOCATION_PERMISSIN_REQUESTCODE);
 
-    }
-
-    private void gotoOpenPermission() {
-        Toast.makeText(this, "请在设置界面打开位置权限", Toast.LENGTH_LONG).show();
     }
 
     public static boolean isGpsProviderEnabled(Context context) {
@@ -461,20 +506,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
+    public static void startLocationSettings(Activity context, int requestCode) {
+        Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+        context.startActivityForResult(enableLocationIntent, requestCode);
+    }
+
     private boolean checkIsBleState() {
         if (!BluetoothUtils.isBluetoothLeSupported(this)) {
             Toast.makeText(this, "此设备不支持蓝牙", Toast.LENGTH_LONG).show();
         } else if (!mBluetoothUtils.isBluetoothIsEnable()) {
-            mBluetoothUtils.askUserToEnableBluetoothIfNeeded(this);
+            return false;
         } else {
             return true;
         }
         return false;
     }
 
-    public static void startLocationSettings(Activity context, int requestCode) {
-        Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        context.startActivityForResult(enableLocationIntent, requestCode);
+    private void enableBluetooth() {
+        mBluetoothUtils.askUserToEnableBluetoothIfNeeded(this);
+
+    }
+
+    private BleActionStateChangedReceiver bleActionStateChangedReceiver;
+    private void registerBleActionReceiver(Context context) {
+
+        if (bleActionStateChangedReceiver == null) {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+
+            bleActionStateChangedReceiver = new BleActionStateChangedReceiver();
+
+            context.registerReceiver(bleActionStateChangedReceiver, filter);
+        }
+    }
+
+    private void unregisterBleActionReceiver(Context context) {
+        if (bleActionStateChangedReceiver != null) {
+            context.unregisterReceiver(bleActionStateChangedReceiver);
+            bleActionStateChangedReceiver = null;
+        }
     }
 
 }

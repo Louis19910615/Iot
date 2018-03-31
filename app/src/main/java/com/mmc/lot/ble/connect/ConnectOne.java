@@ -14,6 +14,7 @@ import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.ble.ServiceUuidConstant;
 import com.mmc.lot.eventbus.AnalysisEvent;
+import com.mmc.lot.eventbus.ConnectEvent;
 import com.mmc.lot.eventbus.EnableEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
@@ -64,7 +65,8 @@ public class ConnectOne {
 
     }
 
-    public void connect(String deviceAddress) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void connect(ConnectEvent connectEvent) {
 
         ConnectStateListener stateListener = new ConnectStateListener() {
             @Override
@@ -108,7 +110,6 @@ public class ConnectOne {
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                 super.onCharacteristicChanged(gatt, characteristic);
-                // TODO EVentbus 上报数据
                 Logger.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
                 EventBus.getDefault().post(new AnalysisEvent(characteristic.getValue()));
 
@@ -131,7 +132,7 @@ public class ConnectOne {
                 }
             }
         });
-        connectManager.connect(deviceAddress);
+        connectManager.connect(connectEvent.getDeviceAddress());
     }
 
     public void disconnect(String deviceAddress) {
