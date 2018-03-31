@@ -5,6 +5,7 @@ import android.widget.Toast;
 
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.TempBean;
 
 import io.reactivex.Observer;
@@ -58,45 +59,10 @@ public class Request {
     }
 
 
-    private void requestTransData() {
-        Repository.init().getTransData()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<BaseBean>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
 
-                    }
-
-                    @Override
-                    public void onNext(BaseBean baseBean) {
-                        if (baseBean != null) {
-                            if (baseBean.getC() == 1) {
-                                Toast.makeText(IotApplication.getContext(), "物流请求成功", Toast.LENGTH_SHORT).show();
-                                ;
-                            } else {
-                                Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
-                                ;
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(IotApplication.getContext(), "物流请求失败", Toast.LENGTH_SHORT).show();
-                        ;
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-    }
 
     private void sendTagData() {
-        Repository.init().sendTagData()
+        Repository.init().sendTagData("", "","")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<BaseBean>() {
@@ -149,19 +115,26 @@ public class Request {
                 });
     }
 
-    private void sendBindData() {
-        Repository.init().bindData()
+    private void sendBindData(String tagid) {
+        Repository.init().bindData(tagid)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<BaseBean>() {
+                .subscribe(new Observer<BindBeanParent>() {
                     @Override
                     public void onSubscribe(Disposable d) {
 
                     }
 
                     @Override
-                    public void onNext(BaseBean baseBean) {
+                    public void onNext(BindBeanParent baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Log.d("zzDebug", "success");
 
+                            } else {
+                                Log.d("zzDebug", "failed");
+                            }
+                        }
                     }
 
                     @Override

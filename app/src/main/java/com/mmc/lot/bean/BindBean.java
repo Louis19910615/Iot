@@ -8,22 +8,13 @@ public class BindBean {
 
 
     /**
-     * token : bbdd44kkcde6553a1b9d4a7db7770f6dbd191d3f1524836518
      * transportInformation : {"waybillNumber":"123456789abcd"}
      * tagInformation : {"tagID":"aabbccddeeff"}
      */
 
-    private String token;
     private TransportInformationBean transportInformation;
     private TagInformationBean tagInformation;
 
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
 
     public TransportInformationBean getTransportInformation() {
         return transportInformation;

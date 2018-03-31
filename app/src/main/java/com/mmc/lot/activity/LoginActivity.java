@@ -16,6 +16,7 @@ import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.net.Repository;
+import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.SharePreUtils;
 
 import io.reactivex.Observer;
@@ -86,10 +87,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                                 SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, baseBean.getO());
                                 SharePreUtils.getInstance().setString(SharePreUtils.USER_NAME, etNickName.getText().toString());
+
                                 Toast.makeText(IotApplication.getContext(), "登录成功", Toast.LENGTH_SHORT).show();
 
-                                Intent intent = new Intent(LoginActivity.this, SettingActivity.class);
-                                startActivity(intent);
+                                IntentUtils.startMainActivity(LoginActivity.this);
                                 finish();
                             } else {
                                 runOnUiThread(new Runnable() {

@@ -1,7 +1,9 @@
 package com.mmc.lot.net;
 
 import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.TempBean;
+import com.mmc.lot.bean.TransBean;
 
 import java.util.Map;
 
@@ -52,12 +54,10 @@ public interface ApiService {
 
     /**
      * 获取物流信息接口
-     * @param token
-     * @return
      */
     @FormUrlEncoded
     @POST("http://ts.longsys.com/apresys/api/info/gettransinfo")
-    Observable<BaseBean>  getTransData(@Field("token") String  token );
+    Observable<TransBean>  getTransData(@FieldMap Map<String, String>  params );
 
     /**
      * 表单上传接口
@@ -69,10 +69,10 @@ public interface ApiService {
     Observable<BaseBean> formData(@FieldMap Map<String, String>  params);
 
     /**
-     * 绑定接口
+     * 获取绑定接口
      */
     @FormUrlEncoded
     @POST("http://ts.longsys.com/apresys/api/info/retrans")
-    Observable<BaseBean> bindData(@FieldMap Map<String, String> params);
+    Observable<BindBeanParent> bindData(@FieldMap Map<String, String> params);
 
 }

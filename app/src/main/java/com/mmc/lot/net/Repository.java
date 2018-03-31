@@ -1,11 +1,12 @@
 package com.mmc.lot.net;
 
 import com.google.gson.Gson;
-import com.mmc.lot.bean.BindBean;
+import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.TagBean;
 import com.mmc.lot.bean.TempBean;
+import com.mmc.lot.bean.TransBean;
 import com.mmc.lot.util.SharePreUtils;
 
 import java.util.ArrayList;
@@ -108,10 +109,17 @@ public class Repository {
      * 获取物流信息
      *
      * @return
+     * @param mac
+     * @param orderId
      */
-    public Observable<BaseBean> getTransData() {
+    public Observable<TransBean> getTransData(String mac, String orderId) {
         String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
-        return apiService.getTransData(token);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("token", token);
+        map.put("tagid", mac);
+        map.put("orderId", orderId);
+        return apiService.getTransData(map);
     }
 
     /**
@@ -123,8 +131,11 @@ public class Repository {
      * "gps": "123,789"
      *
      * @return
+     * @param mac
+     * @param orderId
+     * @param tempareture
      */
-    public Observable<BaseBean> sendTagData() {
+    public Observable<BaseBean> sendTagData(String mac, String orderId, String tempareture) {
 
         Gson gson = new Gson();
 
@@ -132,7 +143,7 @@ public class Repository {
         bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
 
         TagBean.TagInformationBean infoBean = new TagBean.TagInformationBean();
-        infoBean.setMac("00:11:22:33:44:55");
+        infoBean.setMac(mac);
         infoBean.setEnergy(100);
         infoBean.setGps("123,789");
         infoBean.setIntervalTime(1);
@@ -186,19 +197,20 @@ public class Repository {
     }
 
     /**
-     * 绑定tag
-     * @return
+     * 绑定tagID
+     * @param tagid
      */
-    public Observable<BaseBean> bindData() {
+    public Observable<BindBeanParent> bindData(String tagid) {
         Map<String, String> map = new HashMap<>();
-        BindBean bean = new BindBean();
-        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
-        BindBean.TransportInformationBean transBean = new BindBean.TransportInformationBean("123456789abcd");
-
-        bean.setTransportInformation(transBean);
-        BindBean.TagInformationBean tagBean = new BindBean.TagInformationBean("aabbccddeeff");
-        bean.setTagInformation(tagBean);
-        map.put("key", new Gson().toJson(bean));
+//        BindBean bean = new BindBean();
+//        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+//        BindBean.TransportInformationBean transBean = new BindBean.TransportInformationBean("123456789abcd");
+//
+//        bean.setTransportInformation(transBean);
+//        BindBean.TagInformationBean tagBean = new BindBean.TagInformationBean("aabbccddeeff");
+//        bean.setTagInformation(tagBean);
+        map.put("token", SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+        map.put("tagid", tagid);
 
         return apiService.bindData(map);
     }

@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.mmc.lot.activity.MainActivity;
 import com.mmc.lot.R;
+import com.mmc.lot.util.IntentUtils;
 
 /**
  * Created by zhangzd on 2018/3/20.
@@ -81,7 +82,7 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawable = getResources().getDrawable(R.drawable.icon_unselected);
             drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
             tvAdmin.setCompoundDrawables(null, null, drawable, null);
-            userType = "收货方";
+            userType = IntentUtils.TYPE_USER_TAKE;
 
         } else if (v == llSend) {
             Drawable drawableTake = getResources().getDrawable(R.drawable.icon_unselected);
@@ -95,7 +96,7 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawableAdmin = getResources().getDrawable(R.drawable.icon_unselected);
             drawableAdmin.setBounds(0, 0, drawableAdmin.getMinimumWidth(), drawableAdmin.getMinimumHeight());
             tvAdmin.setCompoundDrawables(null, null, drawableAdmin, null);
-            userType = "发货方";
+            userType = IntentUtils.TYPE_USER_SEND;
 
 
         } else if (v == llAdmin) {
@@ -110,7 +111,7 @@ public class SelectRoleActivity extends AppCompatActivity implements View.OnClic
             Drawable drawableSend = getResources().getDrawable(R.drawable.icon_unselected);
             drawableSend.setBounds(0, 0, drawableSend.getMinimumWidth(), drawableSend.getMinimumHeight());
             tvSend.setCompoundDrawables(null, null, drawableSend, null);
-            userType = "快递员";
+            userType = IntentUtils.TYPE_USER_ADMIN;
 
         } else if (v == tvConfirm) {
             Intent intent = new Intent(this, MainActivity.class);

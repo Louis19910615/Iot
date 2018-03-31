@@ -12,26 +12,36 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
+import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
+import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.TransBean;
+import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
+import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.PrintHexBinary;
+import com.mmc.lot.util.SharePreUtils;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
 
 import java.io.UnsupportedEncodingException;
+
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -42,7 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tvFinish;
     private BluetoothUtils mBluetoothUtils;
     private RelativeLayout rlTemp;
-    private TextView tvTemp;
+    private TextView tvTemp, tvSaftTemp;
+    private LinearLayout llTag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.e(TAG, "temp is " + String.valueOf(temp));
             byte[] bytes1 = new byte[]{0x09, (byte) 0xFA};
             Log.e(TAG, "equal is " + (bytes1[1] == (byte) 0xFA));
-            byte[] bytes2 = new byte[] {(byte) 0xFA, (byte) 0xFE};
+            byte[] bytes2 = new byte[]{(byte) 0xFA, (byte) 0xFE};
             int bytes20 = (bytes2[0] & 0xff);
             int bytes21 = (bytes2[1] & 0xff);
             int bytes22 = (bytes21 | bytes20 << 8) & 0xffff;
@@ -75,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             byte[] data = new byte[]{0x01, 0x07, 0x14, 0x12, 0x03, 0x0c, 0x14, 0x08, 0x1e};
             byte check = CrcUtil.calCrc8(data);
             byte[] checks = new byte[1];
-            checks[0]= check;
+            checks[0] = check;
             PrintHexBinary.print(checks);
             byte[] date = DateParseUtil.format(System.currentTimeMillis());
             PrintHexBinary.print(date);
@@ -90,7 +101,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ivBack.setVisibility(View.GONE);
 
         TextView title = (TextView) findViewById(R.id.tv_title_bar_title);
-        title.setText("发货方");
+
+        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+
+        if (!TextUtils.isEmpty(token)) {
+            //send
+            if (token.contains(IntentUtils.providerRole)) {
+                title.setText(IntentUtils.TYPE_USER_SEND);
+            }
+            //take
+            else if (token.contains(IntentUtils.clientRole)) {
+                title.setText(IntentUtils.TYPE_USER_TAKE);
+            }
+            //快递员
+            else if (token.contains(IntentUtils.courierRole)) {
+                title.setText(IntentUtils.TYPE_USER_ADMIN);
+            }
+        }
 
         ivSet = (ImageView) findViewById(R.id.iv_set);
         ivSet.setVisibility(View.VISIBLE);
@@ -105,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         tvFinish = (TextView) findViewById(R.id.tv_finish);
         tvFinish.setOnClickListener(this);
+        llTag = (LinearLayout) findViewById(R.id.ll_tag);
 
         etID = (EditText) findViewById(R.id.et_id);
         etMsgID = (EditText) findViewById(R.id.et_send_id);
@@ -112,42 +140,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rlTemp = (RelativeLayout) findViewById(R.id.rl_temp);
         rlTemp.setOnClickListener(this);
         tvTemp = (TextView) findViewById(R.id.tv_temp);
+        tvSaftTemp = (TextView) findViewById(R.id.tv_temp_txt);
 
-        etID.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        if (!TextUtils.isEmpty(token)) {
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-//                etID.setText(s);
-//                etID.setSelection(s.length());
-            }
-        });
-
-        etMsgID.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            //send
+            if (token.contains(IntentUtils.providerRole)) {
+                rlTemp.setVisibility(View.VISIBLE);
+                tvTemp.setVisibility(View.VISIBLE);
+                tvSaftTemp.setVisibility(View.VISIBLE);
+                llTag.setVisibility(View.VISIBLE);
 
             }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            //take
+            else if (token.contains(IntentUtils.clientRole)) {
+                rlTemp.setVisibility(View.GONE);
+                tvTemp.setVisibility(View.GONE);
+                tvSaftTemp.setVisibility(View.GONE);
+                llTag.setVisibility(View.VISIBLE);
 
             }
+            //快递员
+            else if (token.contains(IntentUtils.courierRole)) {
+                rlTemp.setVisibility(View.GONE);
+                tvTemp.setVisibility(View.GONE);
+                tvSaftTemp.setVisibility(View.GONE);
 
-            @Override
-            public void afterTextChanged(Editable s) {
-//                etMsgID.setText(s);
-//                etMsgID.setSelection(s.length());
+                llTag.setVisibility(View.GONE);
             }
-        });
+        }
+
+//        etID.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+////                etID.setText(s);
+////                etID.setSelection(s.length());
+//            }
+//        });
+//
+//        etMsgID.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+////                etMsgID.setText(s);
+////                etMsgID.setSelection(s.length());
+//            }
+//        });
     }
 
     @Override
@@ -169,15 +226,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if (v == tvFinish) {
-            if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
-                Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
-                return;
+
+            String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+            //send
+            if (token.contains(IntentUtils.providerRole)) {
+                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
+                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString());
             }
-            Intent intent = new Intent(this, SendDetailActivity.class);
-            intent.putExtra("mac", etID.getText().toString());
-            intent.putExtra("orderId", etMsgID.getText().toString());
-            intent.putExtra("saft_temp", tvTemp.getText());
-            startActivity(intent);
+            //take
+            else if (token.contains(IntentUtils.clientRole)) {
+                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
+                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+            }
+            //快递员
+            else if (token.contains(IntentUtils.courierRole)) {
+                if (TextUtils.isEmpty(etMsgID.getText().toString())) {
+                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                requestTransData("", etMsgID.getText().toString());
+            }
+
         } else if (v == ivSet) {
             Intent intent = new Intent(this, SettingActivity.class);
             startActivity(intent);
@@ -191,6 +266,90 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, ZxingActivity.class);
             startActivityForResult(intent, 203);
         }
+    }
+
+    private void sendTagData(String mac, String orderId, String temp) {
+        Repository.init().sendTagData(mac, orderId, temp)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BaseBean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(BaseBean baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
+                                IntentUtils.startSendDetailActivity(MainActivity.this,
+                                        etID.getText().toString(),
+                                        etMsgID.getText().toString(),
+                                        tvTemp.getText().toString());
+//                                etID.clearFocus();
+//                                etID.setText("");
+//                                etMsgID.clearFocus();
+//                                etMsgID.setText("");
+//
+                                finish();
+                            } else {
+                                Toast.makeText(MainActivity.this, "提交失败", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("zzDebug", "error:" + e.getMessage());
+                        Toast.makeText(MainActivity.this, "提交失败", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    private void requestTransData(String mac, String orderId) {
+        Repository.init().getTransData(mac, orderId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<TransBean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(TransBean baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Toast.makeText(IotApplication.getContext(), "物流信息请求成功", Toast.LENGTH_SHORT).show();
+                                IntentUtils.startConfirmActivity(MainActivity.this,
+                                        etID.getText().toString(),
+                                        etMsgID.getText().toString(),
+                                        tvTemp.getText().toString());
+                                finish();
+                            } else {
+                                Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+                        ;
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
 

@@ -209,6 +209,7 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tv_finish"
         android:layout_width="280dp"
         android:layout_height="38dp"
         android:layout_alignParentBottom="true"

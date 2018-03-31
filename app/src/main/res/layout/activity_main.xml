@@ -23,7 +23,7 @@
     <LinearLayout
         android:id="@+id/ll_first"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/title"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
@@ -34,6 +34,8 @@
         android:paddingRight="10dp">
 
         <LinearLayout
+            android:id="@+id/ll_tag"
+            tools:visibility="visible"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_gravity="center"
