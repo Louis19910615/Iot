@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mmc.lot.R;
+import com.mmc.lot.util.IntentUtils;
 
 import java.text.SimpleDateFormat;
 
@@ -81,8 +82,8 @@ public class SendDetailActivity extends AppCompatActivity implements View.OnClic
     @Override
     public void onClick(View v) {
         if (v == tvFinish) {
-            Intent intent = new Intent(this, ConfirmActivity.class);
-            startActivity(intent);
+            IntentUtils.startMainActivity(this);
+            finish();
         }
     }
 }

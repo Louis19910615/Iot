@@ -1,5 +1,6 @@
 package com.mmc.lot.activity;
 
+import android.app.LauncherActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
 import com.mmc.lot.R;
+import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.SharePreUtils;
 
 /**
@@ -29,8 +31,7 @@ public class LanuchActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 } else {
-                    Intent intent = new Intent(LanuchActivity.this, SettingActivity.class);
-                    startActivity(intent);
+                    IntentUtils.startMainActivity(LanuchActivity.this);
                     finish();
                 }
             }

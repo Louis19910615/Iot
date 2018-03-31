@@ -10,6 +10,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.mmc.lot.R;
+import com.mmc.lot.util.IntentUtils;
+import com.mmc.lot.util.SharePreUtils;
 
 /**
  * Created by zhangzd on 2018/3/20.
@@ -18,6 +20,7 @@ import com.mmc.lot.R;
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
 
     private RelativeLayout rl_selete_role;
+    private TextView tvLoginOut;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,6 +43,16 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         rl_selete_role = (RelativeLayout) findViewById(R.id.rl_selete_role);
         rl_selete_role.setOnClickListener(this);
+
+        tvLoginOut = (TextView) findViewById(R.id.tv_finish);
+        tvLoginOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, "");
+                IntentUtils.statLoginActivity(SettingActivity.this);
+                finish();
+            }
+        });
 
 
     }
