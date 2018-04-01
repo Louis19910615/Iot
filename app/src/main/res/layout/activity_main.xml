@@ -91,7 +91,7 @@
                 style="@style/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="快递单号" />
+                android:text="快递单号      " />
 
             <EditText
                 android:id="@+id/et_send_id"
@@ -150,7 +150,7 @@
             android:layout_alignParentRight="true"
             android:drawablePadding="5dp"
             android:drawableRight="@drawable/arrow_list"
-            android:text="18.0 - 28.0 °C" />
+            android:text="-30-60°C" />
 
 
     </RelativeLayout>

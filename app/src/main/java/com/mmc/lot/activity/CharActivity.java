@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -37,7 +38,7 @@ import io.reactivex.schedulers.Schedulers;
 import static java.util.Arrays.asList;
 
 /**
- * @author  by zhangzd on 2018/4/1
+ * @author by zhangzd on 2018/4/1
  */
 
 public class CharActivity extends AppCompatActivity {
@@ -96,8 +97,10 @@ public class CharActivity extends AppCompatActivity {
         setChartView(bodyData);
 
         TempBean tempBean = (TempBean) getIntent().getSerializableExtra("tempBean");
-        Log.d("zzDebug", tempBean.toString()+"");
-        addRealData(tempBean);
+        Log.d("zzDebug", tempBean.toString() + "");
+        if (tempBean != null) {
+            addRealData(tempBean);
+        }
 
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -138,14 +141,27 @@ public class CharActivity extends AppCompatActivity {
     }
 
     private void addRealData(TempBean bean) {
+
         bodyData.getWeight().clear();
         bodyData.getCurrent_time().clear();
 
         List<TempBean.OBean> beans = bean.getO();
+        if (beans == null || beans.size() == 0) {
+            return;
+        }
+
+        if (TextUtils.isEmpty(beans.get(0).getTEMP()) || beans.get(0).getTEMP().equals("[]")) {
+            return;
+        }
+        
         TempBean.OBean oBean = beans.get(0);
         long upTime = oBean.getUPTIME();
         String temp = oBean.getTEMP().substring(1, oBean.getTEMP().length() - 1);
         Log.d("zzDebug", "temp:" + temp);
+        if (TextUtils.isEmpty(temp)) {
+            Toast.makeText(CharActivity.this, "获取温度数据失败", Toast.LENGTH_SHORT).show();
+            return;
+        }
         String[] array = temp.split(",");
 
         int length = array.length;
@@ -153,7 +169,7 @@ public class CharActivity extends AppCompatActivity {
             float data = Float.valueOf(tempData);
             BigDecimal b1 = new BigDecimal(data);
             BigDecimal b2 = new BigDecimal(50.00);
-            DecimalFormat decimalFormat=new DecimalFormat(".00");
+            DecimalFormat decimalFormat = new DecimalFormat(".00");
             weight.add(String.valueOf(decimalFormat.format(b1.add(b2).doubleValue())));
         }
         bodyData.setWeight(weight);
@@ -231,8 +247,6 @@ public class CharActivity extends AppCompatActivity {
         chartView.initLayout();
         chartView.setCurrentPosition(list.size() - 9);
     }
-
-
 
 
     @Override

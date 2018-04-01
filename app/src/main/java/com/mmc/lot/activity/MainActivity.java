@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout rlTemp;
     private TextView tvTemp, tvSaftTemp;
     private LinearLayout llTag;
-    private String min, max;
+    private String min = "-30", max = "60";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
