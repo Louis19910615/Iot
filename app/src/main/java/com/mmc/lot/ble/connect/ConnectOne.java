@@ -6,12 +6,15 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.bean.ShowToastBean;
+import com.mmc.lot.bean.SyncTimeEvent;
 import com.mmc.lot.ble.ServiceUuidConstant;
 import com.mmc.lot.eventbus.AnalysisEvent;
 import com.mmc.lot.eventbus.ConnectEvent;
@@ -68,12 +71,16 @@ public class ConnectOne {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void connect(ConnectEvent connectEvent) {
 
+        Logger.e(TAG, "start connect");
+
         ConnectStateListener stateListener = new ConnectStateListener() {
             @Override
             public void onConnectStateChanged(String address, ConnectState state) {
                 switch (state) {
                     case CONNECTED:
                         Logger.i(TAG, "connected");
+                        EventBus.getDefault().post(new ShowToastBean("连接成功"));
+                        EventBus.getDefault().post(new EnableEvent(address));
                         break;
                     case CONNECTING:
                         Logger.i(TAG, "connecting");
@@ -141,6 +148,7 @@ public class ConnectOne {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public boolean enableNotify(EnableEvent enableEvent) {
+        Logger.e(TAG, "enableNotify start");
         BluetoothGatt gatt = connectManager.getBluetoothGatt(enableEvent.getDeviceAddress());
         if (gatt == null) {
             connectManager.disconnect(enableEvent.getDeviceAddress());
@@ -156,8 +164,11 @@ public class ConnectOne {
 
                 boolean isSuccess = connectManager.startSubscribe(gatt);
                 Log.e(TAG, "RX_CHAR_UUID start subscribe is " + isSuccess);
-                if (!isSuccess) {
+                if (isSuccess) {
                     connectManager.disconnect(enableEvent.getDeviceAddress());
+                } else {
+                    EventBus.getDefault().post(new ShowToastBean("使能成功"));
+                    EventBus.getDefault().post(new SyncTimeEvent(enableEvent.getDeviceAddress(), System.currentTimeMillis()));
                 }
                 return isSuccess;
             }
@@ -168,8 +179,10 @@ public class ConnectOne {
     }
 
     // 同步时间
-    public boolean syncTime(String deviceAddress, long time) {
-        byte[] dateTime = DateParseUtil.format(time);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean syncTime(SyncTimeEvent syncTimeEvent) {
+        Logger.e(TAG, "syncTime start");
+        byte[] dateTime = DateParseUtil.format(syncTimeEvent.getTime());
 
         byte[] data = new byte[10];
         data[0] = 0x01;
@@ -180,7 +193,7 @@ public class ConnectOne {
 
         data[10] = CrcUtil.calcCrc8(data);
 
-        return write(deviceAddress, data);
+        return write(syncTimeEvent.getDeviceAddress(), data);
     }
 
     // 获取信息

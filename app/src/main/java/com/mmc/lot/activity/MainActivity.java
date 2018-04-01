@@ -29,6 +29,7 @@ import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.ShowToastBean;
 import com.mmc.lot.bean.TransBean;
 import com.mmc.lot.ble.analysis.Analysis;
 import com.mmc.lot.ble.connect.ConnectOne;
@@ -45,6 +46,7 @@ import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.PermissionConstant;
 import com.mmc.lot.util.PrintHexBinary;
 import com.mmc.lot.util.SharePreUtils;
+import com.orhanobut.logger.Logger;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -276,8 +278,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, TempActivity.class);
             startActivityForResult(intent, 201);
         } else if (v == ivCamera) {
-            Intent intent = new Intent(this, ZxingActivity.class);
-            startActivityForResult(intent, 202);
+            String deviceName = etID.getText().toString();
+            if (deviceName.contains("tModul")) {
+                startCheckPermission();
+            } else {
+                Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
+            }
+//            Intent intent = new Intent(this, ZxingActivity.class);
+//            startActivityForResult(intent, 202);
         } else if (v == ivMsgCamera) {
             Intent intent = new Intent(this, ZxingActivity.class);
             startActivityForResult(intent, 203);
@@ -368,6 +376,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void showToast(ShowToastBean showToastBean) {
+        Toast.makeText(this, showToastBean.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
     private boolean startCheckPermission() {
         if (checkLocationPermission()) {
             if (isGpsProviderEnabled(this)) {
@@ -392,8 +405,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isBleStateOn = false;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    private void bleStateOn(BleStateOnEvent bleStateOnEvent) {
+    public void bleStateOn(BleStateOnEvent bleStateOnEvent) {
         if (!isBleStateOn) {
+            Logger.e(TAG, "isBleStateOn is " + isBleStateOn);
             // init scanner
             Scanner.getInstance();
             // init connect one

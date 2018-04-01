@@ -7,6 +7,8 @@ import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.bean.ShowToastBean;
+import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.eventbus.ConnectEvent;
 import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.orhanobut.logger.Logger;
@@ -38,10 +40,12 @@ public class Scanner {
     // name example: tModul
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void scanWithName(ScanWithNameEvent scanWithNameEvent) {
+        Logger.e(TAG, "scanWithName is " + scanWithNameEvent.getDeviceName());
         scanManager.addScanFilterCompats(new ScanFilterCompat.Builder()
                 .setDeviceName(scanWithNameEvent.getDeviceName()).build());
         scan();
     }
+
 
     public void scan() {
 
@@ -58,13 +62,18 @@ public class Scanner {
             @Override
             public void onScanResult(int callbackType, ScanResultCompat result) {
                 super.onScanResult(callbackType, result);
-                scanManager.stopCycleScan();
-                Logger.i(TAG, "scan device is " + result.getScanRecord().getDeviceName()
+                EventBus.getDefault().post(new ShowToastBean("扫描成功"));
+
+                stopScan();
+                Logger.i(TAG, "scan device is " + result.getLeDevice().getName()
                         + " : " + result.getLeDevice().getAddress());
                 if (scanResultCompat == null) {
+                    Logger.e(TAG, "onScanResult send getLeDevice");
                     scanResultCompat = result;
+                    DeviceInfo.getInstance().setDeviceAddress(result.getLeDevice().getAddress());
+                    DeviceInfo.getInstance().setDeviceName(result.getLeDevice().getName());
+                    EventBus.getDefault().post(new ConnectEvent(result.getLeDevice().getAddress()));
                 }
-                EventBus.getDefault().post(new ConnectEvent(result.getLeDevice().getAddress()));
             }
 
             @Override
