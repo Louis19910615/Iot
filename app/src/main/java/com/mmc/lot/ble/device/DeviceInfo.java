@@ -4,6 +4,9 @@ import com.mmc.lot.bean.BindBean;
 import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.TagBean;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by louis on 2018/4/1.
  */
@@ -20,10 +23,12 @@ public class DeviceInfo {
     // 绑定tagID及运单号
     private BindBean bindBean;
 
+    // 温度数据
+    private List<Double> tempDatas;
     private static DeviceInfo sInstance;
 
     private DeviceInfo () {
-
+        tempDatas = new ArrayList<>();
     }
 
     public static DeviceInfo getInstance() {
@@ -36,6 +41,14 @@ public class DeviceInfo {
         }
 
         return sInstance;
+    }
+
+    public List<Double> getTempDatas() {
+        return this.tempDatas;
+    }
+
+    public void addTempData(Double data, int offset) {
+        tempDatas.add(data);
     }
 
     public void onDestory() {

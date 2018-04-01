@@ -9,6 +9,8 @@ import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.TempBean;
 
+import java.util.ArrayList;
+
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -63,7 +65,7 @@ public class Request {
 
 
     private void sendTagData() {
-        Repository.init().sendTagData("", "","")
+        Repository.init().sendTagData("", "","", new ArrayList<Double>())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<BaseBean>() {

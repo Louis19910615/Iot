@@ -21,7 +21,9 @@ import com.mmc.lot.bean.SyncTimeEvent;
 import com.mmc.lot.ble.ServiceUuidConstant;
 import com.mmc.lot.eventbus.AnalysisEvent;
 import com.mmc.lot.eventbus.ConnectEvent;
+import com.mmc.lot.eventbus.DisConnectEvent;
 import com.mmc.lot.eventbus.EnableEvent;
+import com.mmc.lot.eventbus.UploadTemperaturesEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
@@ -155,8 +157,9 @@ public class ConnectOne {
         connectManager.connect(connectEvent.getDeviceAddress());
     }
 
-    public void disconnect(String deviceAddress) {
-        connectManager.disconnect(deviceAddress);
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void disconnect(DisConnectEvent disConnectEvent) {
+        connectManager.disconnect(disConnectEvent.getDeviceAddress());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -180,11 +183,11 @@ public class ConnectOne {
                 Log.e(TAG, "RX_CHAR_UUID start subscribe is " + isSuccess);
                 if (isSuccess) {
                     Log.e(TAG, "使能成功");
-                    EventBus.getDefault().post(new ShowToastBean("使能成功"));
+//                    EventBus.getDefault().post(new ShowToastBean("使能成功"));
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            EventBus.getDefault().post(new GetMessageEvent(enableEvent.getDeviceAddress()));
+                            EventBus.getDefault().post(new UploadTemperaturesEvent(enableEvent.getDeviceAddress(), true));
                         }
                     }, 2000);
                 } else {
@@ -225,13 +228,15 @@ public class ConnectOne {
     }
 
     // 上传温度数据
-    public boolean uploadTemperatures(String deviceAddress, boolean isFirst) {
-        if (isFirst) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean uploadTemperatures(UploadTemperaturesEvent uploadTemperaturesEvent) {
+        Log.e(TAG, "uploadTemperatures execute.");
+        if (uploadTemperaturesEvent.getIsFirst()) {
             byte[] data = new byte[]{0x03, 0x00, 0x03};
-            return write(deviceAddress, data);
+            return write(uploadTemperaturesEvent.getDeviceAddress(), data);
         } else {
             byte[] data = new byte[]{0x13, 0x00, 0x13};
-            return write(deviceAddress, data);
+            return write(uploadTemperaturesEvent.getDeviceAddress(), data);
         }
     }
 

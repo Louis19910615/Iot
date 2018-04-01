@@ -139,7 +139,7 @@ public class Repository {
      * @param orderId
      * @param tempareture
      */
-    public Observable<BaseBean> sendTagData(String mac, String orderId, String tempareture) {
+    public Observable<BaseBean> sendTagData(String mac, String orderId, String tempareture, List<Double> tempData) {
 
         Gson gson = new Gson();
 
@@ -155,8 +155,9 @@ public class Repository {
         infoBean.setTagID("aabbccddeeff");
         List<Double> temp = new ArrayList<Double>() {
         };
-        temp.add(30.11);
-        temp.add(-20.31);
+        temp.addAll(tempData);
+//        temp.add(30.11);
+//        temp.add(-20.31);
         bean.setTagData(temp);
 
         bean.setTagInformation(infoBean);

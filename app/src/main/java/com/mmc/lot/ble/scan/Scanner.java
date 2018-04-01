@@ -12,6 +12,7 @@ import com.mmc.lot.IotApplication;
 import com.mmc.lot.bean.ShowToastBean;
 import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.eventbus.ConnectEvent;
+import com.mmc.lot.eventbus.ScanWithAddressEvent;
 import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.orhanobut.logger.Logger;
 
@@ -35,9 +36,9 @@ public class Scanner {
 
     // C7:E4:E3:E2:E1:FE
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void scanWithAddress(ScanWithNameEvent scanWithNameEvent) {
+    public void scanWithAddress(ScanWithAddressEvent scanWithAddressEvent) {
         scanManager.addScanFilterCompats(new ScanFilterCompat.Builder()
-                .setDeviceAddress("C7:E4:E3:E2:E1:FE").build());
+                .setDeviceAddress(scanWithAddressEvent.getDeviceAddress()).build());
         scan();
     }
 

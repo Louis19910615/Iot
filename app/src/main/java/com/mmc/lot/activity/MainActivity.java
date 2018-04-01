@@ -39,6 +39,7 @@ import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.ble.receiver.BleActionStateChangedReceiver;
 import com.mmc.lot.ble.scan.Scanner;
 import com.mmc.lot.eventbus.BleStateOnEvent;
+import com.mmc.lot.eventbus.ScanWithAddressEvent;
 import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.IntentUtils;
@@ -50,6 +51,8 @@ import com.uuzuche.lib_zxing.activity.CodeUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.List;
 
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -249,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString());
+                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
             }
             //take
             else if (token.contains(IntentUtils.clientRole)) {
@@ -275,8 +278,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, TempActivity.class);
             startActivityForResult(intent, 201);
         } else if (v == ivCamera) {
-            String deviceName = etID.getText().toString();
-            if (deviceName.contains("tMod")) {
+            String addressName = etID.getText().toString().toUpperCase();
+
+            if (addressName.split(":").length == 6) {
                 startCheckPermission();
             } else {
                 Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
@@ -294,8 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 2. 表单数据上传接口
      * 3. 回复绑定接口
      */
-    private void sendTagData(String mac, String orderId, String temp) {
-        Repository.init().sendTagData(mac, orderId, temp)
+    private void sendTagData(String mac, String orderId, String temp, List<Double> tempData) {
+        Repository.init().sendTagData(mac, orderId, temp, tempData)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<BaseBean>() {
@@ -526,7 +530,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // init analysis
             Analysis.getInstance();
             // post to scan
-            EventBus.getDefault().post(new ScanWithNameEvent(DeviceInfo.getInstance().getDeviceName()));
+            EventBus.getDefault().post(new ScanWithAddressEvent(etID.getText().toString().toUpperCase()));
 
             isBleStateOn = true;
             unregisterBleActionReceiver(this);

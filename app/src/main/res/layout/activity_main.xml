@@ -57,6 +57,7 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
+                android:hint="XX:XX:XX:XX"
                 android:lines="1"
                 android:inputType="text"
                 android:background="@null"
