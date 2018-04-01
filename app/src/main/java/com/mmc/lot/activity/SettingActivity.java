@@ -43,6 +43,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         rl_selete_role = (RelativeLayout) findViewById(R.id.rl_selete_role);
         rl_selete_role.setOnClickListener(this);
+        rl_selete_role.setVisibility(View.INVISIBLE);
 
         tvLoginOut = (TextView) findViewById(R.id.tv_finish);
         tvLoginOut.setOnClickListener(new View.OnClickListener() {
@@ -50,6 +51,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
             public void onClick(View v) {
                 SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, "");
                 IntentUtils.statLoginActivity(SettingActivity.this);
+
                 finish();
             }
         });

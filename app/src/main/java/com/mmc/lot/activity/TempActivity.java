@@ -51,7 +51,8 @@ public class TempActivity extends AppCompatActivity {
                 String min = etTempMin.getText().toString();
                 String temp = max + "-" + min + "°C";
                 Intent intent = new Intent();
-                intent.putExtra("max_min",temp);
+                intent.putExtra("min",min);
+                intent.putExtra("max",max);
                 setResult(RESULT_OK, intent);
                 finish();
             }

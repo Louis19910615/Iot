@@ -3,7 +3,7 @@ package com.mmc.lot.bean;
 import java.util.List;
 
 /**
- * Created by zhangzd on 2018/3/28.
+ * @author  by zhangzd on 2018/3/28.
  */
 
 public class TagBean {

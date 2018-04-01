@@ -1,12 +1,15 @@
 package com.mmc.lot.bean;
 
+import java.io.Serializable;
+
 /**
- * Created by zhangzd on 2018/3/31.
+ * @author  by zhangzd on 2018/3/31.
  */
 
-public class TransBean {
+public class TransBean implements Serializable {
 
 
+    private static final long serialVersionUID = -958316401861206652L;
     /**
      * c : 1
      * m : 获取运输信息成功
@@ -51,7 +54,9 @@ public class TransBean {
         this.e = e;
     }
 
-    public static class OBean {
+    public static class OBean implements Serializable {
+
+        private static final long serialVersionUID = -6505850379793027973L;
         /**
          * ENERGY : 100
          * CONTACTNUMBER : +8613800138000

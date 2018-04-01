@@ -48,7 +48,7 @@
                 style="@style/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="秒秒测ID" />
+                android:text="Long Sys ID" />
 
             <EditText
                 android:id="@+id/et_id"
