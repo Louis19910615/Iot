@@ -1,5 +1,7 @@
 package com.mmc.lot.ble.scan;
 
+import android.util.Log;
+
 import com.blakequ.bluetooth_manager_lib.BleManager;
 import com.blakequ.bluetooth_manager_lib.scan.BluetoothScanManager;
 import com.blakequ.bluetooth_manager_lib.scan.ScanOverListener;
@@ -31,16 +33,18 @@ public class Scanner {
 
     private static ScanResultCompat scanResultCompat;
 
-    public void scanWithAddress(String address) {
+    // C7:E4:E3:E2:E1:FE
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void scanWithAddress(ScanWithNameEvent scanWithNameEvent) {
         scanManager.addScanFilterCompats(new ScanFilterCompat.Builder()
-                .setDeviceAddress(address).build());
+                .setDeviceAddress("C7:E4:E3:E2:E1:FE").build());
         scan();
     }
 
     // name example: tModul
-    @Subscribe(threadMode = ThreadMode.MAIN)
+
     public void scanWithName(ScanWithNameEvent scanWithNameEvent) {
-        Logger.e(TAG, "scanWithName is " + scanWithNameEvent.getDeviceName());
+        Log.e(TAG, "scanWithName is " + scanWithNameEvent.getDeviceName());
         scanManager.addScanFilterCompats(new ScanFilterCompat.Builder()
                 .setDeviceName(scanWithNameEvent.getDeviceName()).build());
         scan();
@@ -65,7 +69,7 @@ public class Scanner {
                 EventBus.getDefault().post(new ShowToastBean("扫描成功"));
 
                 stopScan();
-                Logger.i(TAG, "scan device is " + result.getLeDevice().getName()
+                Log.e(TAG, "scan device is " + result.getLeDevice().getName()
                         + " : " + result.getLeDevice().getAddress());
                 if (scanResultCompat == null) {
                     Logger.e(TAG, "onScanResult send getLeDevice");

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,6 +14,8 @@ import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.bean.GetMessageEvent;
+import com.mmc.lot.bean.ResetTagEvent;
 import com.mmc.lot.bean.ShowToastBean;
 import com.mmc.lot.bean.SyncTimeEvent;
 import com.mmc.lot.ble.ServiceUuidConstant;
@@ -68,19 +71,20 @@ public class ConnectOne {
 
     }
 
+    private boolean isDiscovered = false;
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void connect(ConnectEvent connectEvent) {
-
         Logger.e(TAG, "start connect");
 
+        isDiscovered = false;
         ConnectStateListener stateListener = new ConnectStateListener() {
             @Override
             public void onConnectStateChanged(String address, ConnectState state) {
                 switch (state) {
                     case CONNECTED:
                         Logger.i(TAG, "connected");
-                        EventBus.getDefault().post(new ShowToastBean("连接成功"));
-                        EventBus.getDefault().post(new EnableEvent(address));
+
                         break;
                     case CONNECTING:
                         Logger.i(TAG, "connecting");
@@ -96,7 +100,7 @@ public class ConnectOne {
 
             @Override
             public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-                Logger.e(TAG, "characteristic read is " + Arrays.toString(characteristic.getValue()));
+                Log.e(TAG, "characteristic read is " + Arrays.toString(characteristic.getValue()));
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Logger.i(TAG, "success to read characteristic");
                 }else{
@@ -117,7 +121,7 @@ public class ConnectOne {
             @Override
             public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
                 super.onCharacteristicChanged(gatt, characteristic);
-                Logger.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
+                Log.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
                 EventBus.getDefault().post(new AnalysisEvent(characteristic.getValue()));
 
             }
@@ -125,8 +129,13 @@ public class ConnectOne {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, final int status, int newState) {
                 super.onConnectionStateChange(gatt, status, newState);
-
-                if (newState == BluetoothProfile.STATE_DISCONNECTED){
+                if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+                    EventBus.getDefault().post(new ShowToastBean("连接成功"));
+                    gatt.discoverServices();
+                } else if (status == 133) {
+                        Logger.e(TAG, "-----133-----");
+                    }
+                else if (newState == BluetoothProfile.STATE_DISCONNECTED){
                     // TODO 通知界面断开
                 }
             }
@@ -135,7 +144,11 @@ public class ConnectOne {
             public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
                 super.onServicesDiscovered(gatt, status);
                 if (status == BluetoothGatt.GATT_SUCCESS){
-                    EventBus.getDefault().post(new EnableEvent(gatt.getDevice().getAddress()));
+                    Logger.e(TAG, "onServicesDiscovered success.");
+                    if (!isDiscovered) {
+                        isDiscovered = true;
+                        EventBus.getDefault().post(new EnableEvent(gatt.getDevice().getAddress()));
+                    }
                 }
             }
         });
@@ -147,10 +160,11 @@ public class ConnectOne {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public boolean enableNotify(EnableEvent enableEvent) {
+    public boolean enableNotify(final EnableEvent enableEvent) {
         Logger.e(TAG, "enableNotify start");
         BluetoothGatt gatt = connectManager.getBluetoothGatt(enableEvent.getDeviceAddress());
         if (gatt == null) {
+            Logger.e(TAG, "gatt is null.");
             connectManager.disconnect(enableEvent.getDeviceAddress());
             return false;
         }
@@ -165,15 +179,22 @@ public class ConnectOne {
                 boolean isSuccess = connectManager.startSubscribe(gatt);
                 Log.e(TAG, "RX_CHAR_UUID start subscribe is " + isSuccess);
                 if (isSuccess) {
-                    connectManager.disconnect(enableEvent.getDeviceAddress());
-                } else {
+                    Log.e(TAG, "使能成功");
                     EventBus.getDefault().post(new ShowToastBean("使能成功"));
-                    EventBus.getDefault().post(new SyncTimeEvent(enableEvent.getDeviceAddress(), System.currentTimeMillis()));
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            EventBus.getDefault().post(new GetMessageEvent(enableEvent.getDeviceAddress()));
+                        }
+                    }, 2000);
+                } else {
+                    connectManager.disconnect(enableEvent.getDeviceAddress());
                 }
                 return isSuccess;
             }
         }
 
+        Log.e(TAG, "使能失败");
         connectManager.disconnect(enableEvent.getDeviceAddress());
         return false;
     }
@@ -181,7 +202,7 @@ public class ConnectOne {
     // 同步时间
     @Subscribe(threadMode = ThreadMode.MAIN)
     public boolean syncTime(SyncTimeEvent syncTimeEvent) {
-        Logger.e(TAG, "syncTime start");
+        Log.e(TAG, "syncTime start");
         byte[] dateTime = DateParseUtil.format(syncTimeEvent.getTime());
 
         byte[] data = new byte[10];
@@ -191,15 +212,16 @@ public class ConnectOne {
             data[i + 2] = dateTime[i];
         }
 
-        data[10] = CrcUtil.calcCrc8(data);
+        data[9] = CrcUtil.calcCrc8(data);
 
         return write(syncTimeEvent.getDeviceAddress(), data);
     }
 
     // 获取信息
-    public boolean getMessage(String deviceAddress) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean getMessage(GetMessageEvent getMessageEvent) {
         byte[] data = new byte[]{0x02, 0x00, 0x02};
-        return write(deviceAddress, data);
+        return write(getMessageEvent.getDeviceAddress(), data);
     }
 
     // 上传温度数据
@@ -312,9 +334,10 @@ public class ConnectOne {
     }
 
     // 重置Tag
-    public boolean resetTag(String deviceAddress) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean resetTag(ResetTagEvent resetTagEvent) {
         byte[] data = new byte[]{0x09, 0x00, 0x09};
-        return write(deviceAddress, data);
+        return write(resetTagEvent.getDeviceAddress(), data);
     }
 
     public boolean write(String deviceAddress, byte[] bytes) {
@@ -326,6 +349,7 @@ public class ConnectOne {
         if (bluetoothGattService != null) {
             BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
             if (txCharacteristic != null) {
+                connectManager.setServiceUUID(bluetoothGattService.getUuid().toString());
                 connectManager.addBluetoothSubscribeData(
                         new BluetoothSubScribeData.Builder().setCharacteristicWrite(txCharacteristic.getUuid(), bytes).build()
                 );

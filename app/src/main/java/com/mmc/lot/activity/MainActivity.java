@@ -279,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivityForResult(intent, 201);
         } else if (v == ivCamera) {
             String deviceName = etID.getText().toString();
-            if (deviceName.contains("tModul")) {
+            if (deviceName.contains("tMod")) {
                 startCheckPermission();
             } else {
                 Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
@@ -378,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void showToast(ShowToastBean showToastBean) {
-        Toast.makeText(this, showToastBean.getMessage(), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, showToastBean.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private boolean startCheckPermission() {
