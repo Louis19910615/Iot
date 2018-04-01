@@ -50,7 +50,7 @@ public interface ApiService {
      */
     @FormUrlEncoded
     @POST("http://ts.longsys.com/apresys/api/info/gettagtempinfo")
-    Observable<TempBean>  getTempData(@Field("token") String  token );
+    Observable<TempBean>  getTempData(@FieldMap Map<String, String>   params);
 
     /**
      * 获取物流信息接口

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#4EA982"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/header"
+        layout="@layout/common_action_bar_layout" />
+
+    <com.mmc.lot.util.ChartView
+        android:id="@+id/chartview"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        app:bgcolor="#00000000"
+        app:interval="50dp"
+        app:isScroll="true"
+        app:linecolor="#ffffff"
+        app:pastxtextcolor="#4dffffff"
+        app:xylinecolor="#e2e2e2"
+        app:xylinewidth="1dp"
+        app:xytextcolor="#ffffff"
+        app:xytextsize="10sp"
+        app:ystringcolor="#ffffff"
+        app:ytextsize="12sp" />
+
+</LinearLayout>

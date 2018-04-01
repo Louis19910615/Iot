@@ -29,6 +29,8 @@ import com.blakequ.bluetooth_manager_lib.util.BluetoothUtils;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.bean.BindBeanParent;
+import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.ShowToastBean;
 import com.mmc.lot.bean.TransBean;
 import com.mmc.lot.ble.analysis.Analysis;
@@ -39,12 +41,8 @@ import com.mmc.lot.ble.scan.Scanner;
 import com.mmc.lot.eventbus.BleStateOnEvent;
 import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.mmc.lot.net.Repository;
-import com.mmc.lot.util.CrcUtil;
-import com.mmc.lot.util.DataTransfer;
-import com.mmc.lot.util.DateParseUtil;
 import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.PermissionConstant;
-import com.mmc.lot.util.PrintHexBinary;
 import com.mmc.lot.util.SharePreUtils;
 import com.orhanobut.logger.Logger;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
@@ -52,8 +50,6 @@ import com.uuzuche.lib_zxing.activity.CodeUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import java.io.UnsupportedEncodingException;
 
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -71,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout rlTemp;
     private TextView tvTemp, tvSaftTemp;
     private LinearLayout llTag;
+    private String min, max;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -184,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tvTemp.setVisibility(View.GONE);
                 tvSaftTemp.setVisibility(View.GONE);
 
-                llTag.setVisibility(View.GONE);
+                llTag.setVisibility(View.VISIBLE);
             }
         }
 
@@ -268,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                requestTransData("", etMsgID.getText().toString());
+                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
             }
 
         } else if (v == ivSet) {
@@ -292,6 +289,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * 1. 先进行数据上传接口
+     * 2. 表单数据上传接口
+     * 3. 回复绑定接口
+     */
     private void sendTagData(String mac, String orderId, String temp) {
         Repository.init().sendTagData(mac, orderId, temp)
                 .subscribeOn(Schedulers.io())
@@ -306,17 +308,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onNext(BaseBean baseBean) {
                         if (baseBean != null) {
                             if (baseBean.getC() == 1) {
-                                Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
-                                IntentUtils.startSendDetailActivity(MainActivity.this,
-                                        etID.getText().toString(),
-                                        etMsgID.getText().toString(),
-                                        tvTemp.getText().toString());
-//                                etID.clearFocus();
-//                                etID.setText("");
-//                                etMsgID.clearFocus();
-//                                etMsgID.setText("");
-//
-                                finish();
+//                                Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
+                                sendFormData();
                             } else {
                                 Toast.makeText(MainActivity.this, "提交失败", Toast.LENGTH_SHORT).show();
                             }
@@ -336,6 +329,124 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
+    //表单数据
+    private void sendFormData() {
+        //表单数据bean(tagid, orderId, safttemp)
+        FormBean bean = getFormBean();
+
+        Repository.init().sendFormData(bean)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BaseBean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(BaseBean baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+//                                Toast.makeText(MainActivity.this, "表单提交成功", Toast.LENGTH_SHORT).show();
+                                sendBindData(etID.getText().toString());
+                            } else {
+                                Toast.makeText(MainActivity.this, "表单提交失败", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("zzDebug", "error:" + e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    @NonNull
+    private FormBean getFormBean() {
+        FormBean bean = new FormBean();
+        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+
+        FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
+        transBean.setLogisticsCompany("顺丰速运");
+        transBean.setOrderId(etMsgID.getText().toString());
+
+        FormBean.TransportInformationBean.ConsigneeBean consignee = new FormBean.TransportInformationBean.ConsigneeBean("中国医药集团", "北京市海淀区知春路20号", "8613800138000");
+        transBean.setConsignee(consignee);
+        FormBean.TransportInformationBean.ConsignorBean consignor = new FormBean.TransportInformationBean.ConsignorBean("深圳市人民医院", "广东省深圳市罗湖区东门北路1017号", "8613811138111");
+        transBean.setConsignor(consignor);
+        FormBean.TransportInformationBean.ProductBean productBean = new FormBean.TransportInformationBean.ProductBean("中国医药集团", "流感疫苗");
+        transBean.setProduct(productBean);
+
+
+        FormBean.TransportInformationBean.ValidRangeBean validRangeBean = new FormBean.TransportInformationBean.ValidRangeBean(Integer.parseInt(min), Integer.parseInt(max));
+        transBean.setValidRange(validRangeBean);
+
+        FormBean.TagInformationBean tagInformationBean = new FormBean.TagInformationBean();
+        tagInformationBean.setMac("00:11:22:33:44:55");
+        tagInformationBean.setTagID(etID.getText().toString());
+        tagInformationBean.setEnergy(100);
+        tagInformationBean.setIntervalTime(1);
+        tagInformationBean.setGps("123,789");
+        tagInformationBean.setCategory("bluetooth");
+        tagInformationBean.setDescription("record temperature");
+
+        bean.setTransportInformation(transBean);
+        bean.setTagInformation(tagInformationBean);
+        return bean;
+    }
+
+
+    private void sendBindData(String tagid) {
+        Repository.init().bindData(tagid)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BindBeanParent>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(BindBeanParent baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Log.d("zzDebug", "success");
+                                Toast.makeText(MainActivity.this, "绑定成功", Toast.LENGTH_SHORT).show();
+                                IntentUtils.startSendDetailActivity(MainActivity.this,
+                                        etID.getText().toString(),
+                                        etMsgID.getText().toString(),
+                                        tvTemp.getText().toString());
+                                finish();
+                            } else {
+                                Toast.makeText(MainActivity.this, "绑定失败", Toast.LENGTH_SHORT).show();
+                                Log.d("zzDebug", "failed");
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("zzDebug", "error:" + e.getMessage());
+                        Toast.makeText(MainActivity.this, "绑定失败", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    /**
+     * 获取物流信息接口
+     */
     private void requestTransData(String mac, String orderId) {
         Repository.init().getTransData(mac, orderId)
                 .subscribeOn(Schedulers.io())
@@ -350,12 +461,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onNext(TransBean baseBean) {
                         if (baseBean != null) {
                             if (baseBean.getC() == 1) {
-                                Toast.makeText(IotApplication.getContext(), "物流信息请求成功", Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(IotApplication.getContext(), "物流信息请求成功", Toast.LENGTH_SHORT).show();
                                 IntentUtils.startConfirmActivity(MainActivity.this,
                                         etID.getText().toString(),
                                         etMsgID.getText().toString(),
-                                        tvTemp.getText().toString());
-                                finish();
+                                        tvTemp.getText().toString(), baseBean);
+//                                finish();
                             } else {
                                 Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
                             }
@@ -458,7 +569,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else if (requestCode == 201) {
             if (data != null) {
-                String temp = data.getStringExtra("max_min");
+                min = data.getStringExtra("min");
+                max = data.getStringExtra("max");
+                String temp = min + "-" + max + "°C";
                 tvTemp.setText(temp);
             }
         } else if (requestCode == 202) {
@@ -542,6 +655,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private BleActionStateChangedReceiver bleActionStateChangedReceiver;
+
     private void registerBleActionReceiver(Context context) {
 
         if (bleActionStateChangedReceiver == null) {

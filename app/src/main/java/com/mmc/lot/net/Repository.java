@@ -99,10 +99,14 @@ public class Repository {
      * 获取温度
      *
      * @return
+     * @param tagid
      */
-    public Observable<TempBean> getTemp() {
+    public Observable<TempBean> getTemp(String tagid) {
         String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
-        return apiService.getTempData(token);
+        Map<String, String> map = new HashMap<>();
+        map.put("token", token);
+        map.put("tagid", tagid);
+        return apiService.getTempData(map);
     }
 
     /**
@@ -118,7 +122,7 @@ public class Repository {
         Map<String, String> map = new HashMap<>();
         map.put("token", token);
         map.put("tagid", mac);
-        map.put("orderId", orderId);
+//        map.put("orderId", orderId);
         return apiService.getTransData(map);
     }
 
@@ -163,34 +167,9 @@ public class Repository {
         return apiService.sendData(map);
     }
 
-    public Observable<BaseBean> sendFormData() {
+    public Observable<BaseBean> sendFormData(FormBean bean) {
         Map<String, String> map = new HashMap<>();
-        FormBean bean = new FormBean();
-        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
 
-        FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
-        transBean.setLogisticsCompany("顺丰速运");
-        FormBean.TransportInformationBean.ConsigneeBean consignee = new FormBean.TransportInformationBean.ConsigneeBean("中国医药集团", "北京市海淀区知春路20号", "8613800138000");
-        transBean.setConsignee(consignee);
-        FormBean.TransportInformationBean.ConsignorBean consignor = new FormBean.TransportInformationBean.ConsignorBean("深圳市人民医院", "广东省深圳市罗湖区东门北路1017号", "8613811138111");
-        transBean.setConsignor(consignor);
-        FormBean.TransportInformationBean.ProductBean productBean = new FormBean.TransportInformationBean.ProductBean("中国医药集团", "流感疫苗");
-        transBean.setProduct(productBean);
-
-        FormBean.TransportInformationBean.ValidRangeBean validRangeBean = new FormBean.TransportInformationBean.ValidRangeBean(-30, 60);
-        transBean.setValidRange(validRangeBean);
-
-        FormBean.TagInformationBean tagInformationBean = new FormBean.TagInformationBean();
-        tagInformationBean.setMac("00:11:22:33:44:55");
-        tagInformationBean.setTagID("aabbccddeeff");
-        tagInformationBean.setEnergy(100);
-        tagInformationBean.setIntervalTime(1);
-        tagInformationBean.setGps("123,789");
-        tagInformationBean.setCategory("bluetooth");
-        tagInformationBean.setDescription("record temperature");
-
-        bean.setTransportInformation(transBean);
-        bean.setTagInformation(tagInformationBean);
         map.put("key", new Gson().toJson(bean));
 
         return apiService.formData(map);

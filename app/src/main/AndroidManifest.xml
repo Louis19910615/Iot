@@ -19,7 +19,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.LanuchActivity">
+        <activity
+            android:name=".activity.LanuchActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,27 +35,42 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan|stateHidden" />
 
-        <activity android:name=".activity.SendDetailActivity" />
-        <activity android:name=".activity.ConfirmActivity" />
-        <activity android:name=".activity.SettingActivity" />
-        <activity android:name=".activity.SelectRoleActivity" />
+        <activity
+            android:name=".activity.SendDetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ConfirmActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SettingActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SelectRoleActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".activity.RegisterActivity"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden" />
 
         <activity
             android:name=".activity.TempActivity"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden" />
 
         <activity
             android:name=".activity.LoginActivity"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan|stateHidden" />
 
         <activity
             android:name=".activity.ZxingActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".activity.CharActivity"
             android:screenOrientation="portrait" />
     </application>
 

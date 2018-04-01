@@ -6,6 +6,7 @@ import android.widget.Toast;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.BindBeanParent;
+import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.TempBean;
 
 import io.reactivex.Observer;
@@ -22,7 +23,7 @@ import io.reactivex.schedulers.Schedulers;
 public class Request {
 
     private void requestTempData() {
-        Repository.init().getTemp()
+        Repository.init().getTemp("")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<TempBean>() {
@@ -89,7 +90,7 @@ public class Request {
     }
 
     private void sendFormData() {
-        Repository.init().sendFormData()
+        Repository.init().sendFormData(new FormBean())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<BaseBean>() {

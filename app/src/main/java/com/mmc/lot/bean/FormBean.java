@@ -55,6 +55,15 @@ public class FormBean {
         private ConsigneeBean consignee;
         private ProductBean product;
         private ValidRangeBean validRange;
+        private String orderId;
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String orderId) {
+            this.orderId = orderId;
+        }
 
         public String getLogisticsCompany() {
             return logisticsCompany;
