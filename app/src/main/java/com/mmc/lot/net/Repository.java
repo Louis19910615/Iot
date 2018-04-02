@@ -147,12 +147,12 @@ public class Repository {
         bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
 
         TagBean.TagInformationBean infoBean = new TagBean.TagInformationBean();
-        infoBean.setMac(mac);
+        infoBean.setMac("0:11:22:33:44:55");
         infoBean.setEnergy(100);
         infoBean.setGps("123,789");
         infoBean.setIntervalTime(1);
         infoBean.setStartTime("2018/03/04 15:00:00");
-        infoBean.setTagID("aabbccddeeff");
+        infoBean.setTagID(mac);
         List<Double> temp = new ArrayList<Double>() {
         };
         temp.addAll(tempData);
