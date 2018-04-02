@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -74,8 +75,8 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
         tvFinish.setOnClickListener(this);
 
         tempBean = new TempBean();
-        if (transBean != null ) {
-            TransBean.OBean bean =  transBean.getO();
+        if (transBean != null) {
+            TransBean.OBean bean = transBean.getO();
             if (bean != null) {
                 tvId.setText(bean.getTAGID());
                 tvStartTime.setText(timeStamp2Date(bean.getUPTIME()));
@@ -150,10 +151,20 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
         if (v == tvFinish) {
             IntentUtils.startMainActivity(this);
             finish();
-        } else if (v ==llTemp) {
-            Intent intent = new Intent(ConfirmActivity.this, CharActivity.class);
-            intent.putExtra("tempBean", tempBean);
-            startActivity(intent);
+        } else if (v == llTemp) {
+            if (tempBean != null && tempBean.getO() != null
+                    && tempBean.getO().size() > 0 &&
+                    !TextUtils.isEmpty(tempBean.getO().get(0).getTEMP())) {
+                if ("[]".equals(tempBean.getO().get(0).getTEMP())) {
+                    Toast.makeText(ConfirmActivity.this, "获取温度数据失败", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Intent intent = new Intent(ConfirmActivity.this, CharActivity.class);
+                intent.putExtra("tempBean", tempBean);
+                startActivity(intent);
+            } else {
+                Toast.makeText(ConfirmActivity.this, "获取温度数据失败", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
