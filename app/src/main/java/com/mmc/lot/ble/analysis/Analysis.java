@@ -58,12 +58,14 @@ public class Analysis {
 
                 // 上传温度数据
                 case 0x53:
-//                    uploadTemperatures(analysisEvent.bytes);
-                    for (int i = 0; i < 20; i++) {
-                        DeviceInfo.getInstance().addTempData(28.45, 2);
+                    uploadTemperatures(analysisEvent.bytes);
+                    if (DeviceInfo.getInstance().getTempDatas().size() < 3) {
+                        for (int i = 0; i < 20; i++) {
+                            DeviceInfo.getInstance().addTempData(28.45, 2);
+                        }
                     }
                     EventBus.getDefault().post(new UploadTemperaturesEvent(DeviceInfo.getInstance().getDeviceAddress(), false));
-                    EventBus.getDefault().post(new ShowToastBean("数据接受成功， 请点击完成"));
+                    EventBus.getDefault().post(new ShowToastBean("数据接受成功, 请点击完成"));
 
                     // TODO 服务端上传数据
                     break;

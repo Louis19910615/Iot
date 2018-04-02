@@ -17,6 +17,7 @@ import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BodyData;
 import com.mmc.lot.bean.TempBean;
+import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.ChartView;
 import com.mmc.lot.util.DataConvertUtil;
@@ -95,10 +96,11 @@ public class CharActivity extends AppCompatActivity {
 
         setChartView(bodyData);
 
-        TempBean tempBean = (TempBean) getIntent().getSerializableExtra("tempBean");
-        Log.d("zzDebug", tempBean.toString()+"");
-        addRealData(tempBean);
+//        TempBean tempBean = (TempBean) getIntent().getSerializableExtra("tempBean");
+//        Log.d("zzDebug", tempBean.toString()+"");
+//        addRealData(tempBean);
 
+        addRealData();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -135,6 +137,35 @@ public class CharActivity extends AppCompatActivity {
         current_time.add(time - 5000);
 
         bodyData.setCurrent_time(current_time);
+    }
+
+    private void addRealData() {
+        bodyData.getWeight().clear();
+        bodyData.getCurrent_time().clear();
+
+        List<Double> tempdata = DeviceInfo.getInstance().getTempDatas();
+
+        Double[] array = new Double[tempdata.size()];
+        tempdata.toArray(array);
+
+        for (Double dData : array) {
+
+            BigDecimal b1 = new BigDecimal(dData);
+            BigDecimal b2 = new BigDecimal(50.00);
+            DecimalFormat decimalFormat=new DecimalFormat(".00");
+            weight.add(String.valueOf(decimalFormat.format(b1.add(b2).doubleValue())));
+        }
+
+        bodyData.setWeight(weight);
+
+        long upTime = System.currentTimeMillis() - 2 * 24 * 60 * 60 * 1000;
+
+        for (int i = 0; i < tempdata.size(); i++) {
+            long space = (tempdata.size() - i) * 60 * 1000;
+            current_time.add(upTime - space);
+        }
+        bodyData.setCurrent_time(current_time);
+
     }
 
     private void addRealData(TempBean bean) {

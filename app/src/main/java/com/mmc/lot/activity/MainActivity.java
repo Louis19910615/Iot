@@ -39,6 +39,8 @@ import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.ble.receiver.BleActionStateChangedReceiver;
 import com.mmc.lot.ble.scan.Scanner;
 import com.mmc.lot.eventbus.BleStateOnEvent;
+import com.mmc.lot.eventbus.DisConnectEvent;
+import com.mmc.lot.eventbus.GotoCharActivityEvent;
 import com.mmc.lot.eventbus.ScanWithAddressEvent;
 import com.mmc.lot.eventbus.ScanWithNameEvent;
 import com.mmc.lot.net.Repository;
@@ -252,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
+//                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
             }
             //take
             else if (token.contains(IntentUtils.clientRole)) {
@@ -260,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+//                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
             }
             //快递员
             else if (token.contains(IntentUtils.courierRole)) {
@@ -268,7 +270,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
+
+//                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
             }
 
         } else if (v == ivSet) {
@@ -312,8 +316,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onNext(BaseBean baseBean) {
                         if (baseBean != null) {
                             if (baseBean.getC() == 1) {
-//                                Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
-                                sendFormData();
+                                Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
+                                EventBus.getDefault().post(new GotoCharActivityEvent());
+                                EventBus.getDefault().post(new DisConnectEvent(DeviceInfo.getInstance().getDeviceAddress()));
+//                                sendFormData();
                             } else {
                                 Toast.makeText(MainActivity.this, "提交失败", Toast.LENGTH_SHORT).show();
                             }
@@ -679,4 +685,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void gotoCharActivity(GotoCharActivityEvent event) {
+        Intent intent = new Intent(MainActivity.this, CharActivity.class);
+//        intent.putExtra("tempBean", tempBean);
+        startActivity(intent);
+    }
 }
