@@ -688,7 +688,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void gotoCharActivity(GotoCharActivityEvent event) {
-        Intent intent = new Intent(MainActivity.this, CharActivity.class);
+        Intent intent = new Intent(MainActivity.this, ChartActivity2.class);
 //        intent.putExtra("tempBean", tempBean);
         startActivity(intent);
     }

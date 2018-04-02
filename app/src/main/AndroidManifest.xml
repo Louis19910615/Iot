@@ -72,6 +72,9 @@
         <activity
             android:name=".activity.CharActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ChartActivity2"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
