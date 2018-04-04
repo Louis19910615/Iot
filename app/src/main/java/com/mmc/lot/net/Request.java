@@ -24,6 +24,12 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Request {
 
+    public static FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
+
+    public static void setTransBean(FormBean.TransportInformationBean tranBean) {
+        transBean = tranBean;
+    }
+
     private void requestTempData() {
         Repository.init().getTemp("")
                 .subscribeOn(Schedulers.io())
