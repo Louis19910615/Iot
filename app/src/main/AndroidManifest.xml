@@ -75,6 +75,11 @@
         <activity
             android:name=".activity.ChartActivity2"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".activity.OrderActivity"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
