@@ -1,12 +1,12 @@
-package com.mmc.lot.bean;
+package com.mmc.lot.eventbus.ui;
 
 /**
  * Created by louis on 2018/4/1.
  */
 
-public class ShowToastBean {
+public class ShowToastEvent {
     private String message;
-    public ShowToastBean(String message) {
+    public ShowToastEvent(String message) {
         this.message = message;
     }
 

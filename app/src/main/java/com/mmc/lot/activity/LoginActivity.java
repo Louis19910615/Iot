@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
+import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.SharePreUtils;
@@ -87,6 +88,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                                 SharePreUtils.getInstance().setString(SharePreUtils.USER_TOKEN, baseBean.getO());
                                 SharePreUtils.getInstance().setString(SharePreUtils.USER_NAME, etNickName.getText().toString());
+
+                                DataCenter.SetUserInfo.setUserName(etNickName.getText().toString());
+                                DataCenter.SetUserInfo.setToken(baseBean.getO());
 
                                 Toast.makeText(IotApplication.getContext(), "登录成功", Toast.LENGTH_SHORT).show();
 

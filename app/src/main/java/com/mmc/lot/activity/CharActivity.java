@@ -17,7 +17,7 @@ import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BodyData;
 import com.mmc.lot.bean.TempBean;
-import com.mmc.lot.ble.device.DeviceInfo;
+import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.ChartView;
 import com.mmc.lot.util.DataConvertUtil;
@@ -143,7 +143,7 @@ public class CharActivity extends AppCompatActivity {
         bodyData.getWeight().clear();
         bodyData.getCurrent_time().clear();
 
-        List<Double> tempdata = DeviceInfo.getInstance().getTempDatas();
+        List<Double> tempdata = DataCenter.getInstance().getDeviceInfo().getTemperatureDatas();
 
         Double[] array = new Double[tempdata.size()];
         tempdata.toArray(array);

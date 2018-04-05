@@ -29,7 +29,7 @@ import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.Utils;
 import com.mmc.lot.R;
-import com.mmc.lot.ble.device.DeviceInfo;
+import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.util.MyMarkerView;
 
 import java.math.BigDecimal;
@@ -162,7 +162,7 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         list.add(55.12);
         list.add(-35.16);
 
-        List<Double> tempdata = DeviceInfo.getInstance().getTempDatas();
+        List<Double> tempdata = DataCenter.getInstance().getDeviceInfo().getTemperatureDatas();
         if (tempdata == null || tempdata.size() == 0) {
             return;
         }

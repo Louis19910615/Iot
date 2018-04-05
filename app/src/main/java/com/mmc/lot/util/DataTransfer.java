@@ -21,4 +21,8 @@ public class DataTransfer {
     public static int byte2int(byte res) {
         return (res & 0xff);
     }
+
+    public static String byte2Sixteen(byte res) {
+        return Integer.toHexString(res & 0xFF);
+    }
 }

@@ -3,6 +3,7 @@ package com.mmc.lot;
 import android.app.Application;
 import android.content.Context;
 
+import com.mmc.lot.data.DataCenter;
 import com.uuzuche.lib_zxing.activity.ZXingLibrary;
 
 import org.greenrobot.eventbus.EventBus;
@@ -16,6 +17,7 @@ public class IotApplication extends Application {
     private static IotApplication instance;
 
     private static Context context;
+    private static DataCenter dataCenter;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -30,6 +32,7 @@ public class IotApplication extends Application {
 
     private void init() {
         instance = this;
+        dataCenter = DataCenter.getInstance();
     }
 
     public static IotApplication getInstance() {

@@ -1,13 +1,12 @@
-package com.mmc.lot.bean;
+package com.mmc.lot.eventbus.ble;
 
 /**
- * Created by louis on 2018/4/1.
+ * Created by louis on 2018/4/2.
  */
 
-public class ResetTagEvent {
+public class DisConnectEvent {
     private String deviceAddress;
-
-    public ResetTagEvent(String deviceAddress) {
+    public DisConnectEvent(String deviceAddress) {
         this.deviceAddress = deviceAddress;
     }
 

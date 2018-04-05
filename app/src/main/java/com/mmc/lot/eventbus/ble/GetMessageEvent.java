@@ -1,13 +1,14 @@
-package com.mmc.lot.eventbus;
+package com.mmc.lot.eventbus.ble;
 
 /**
  * Created by louis on 2018/4/1.
  */
 
-public class ConnectEvent {
+public class GetMessageEvent {
 
     private String deviceAddress;
-    public ConnectEvent(String deviceAddress) {
+
+    public GetMessageEvent(String deviceAddress) {
         this.deviceAddress = deviceAddress;
     }
 

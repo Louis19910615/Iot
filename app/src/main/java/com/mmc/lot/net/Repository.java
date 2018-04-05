@@ -149,6 +149,7 @@ public class Repository {
         TagBean.TagInformationBean infoBean = new TagBean.TagInformationBean();
         infoBean.setMac("0:11:22:33:44:55");
         infoBean.setEnergy(100);
+        // TODO 获取GPS导航
         infoBean.setGps("123,789");
         infoBean.setIntervalTime(1);
         infoBean.setStartTime("2018/03/04 15:00:00");

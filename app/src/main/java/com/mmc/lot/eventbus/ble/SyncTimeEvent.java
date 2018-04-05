@@ -1,4 +1,4 @@
-package com.mmc.lot.bean;
+package com.mmc.lot.eventbus.ble;
 
 /**
  * Created by louis on 2018/4/1.

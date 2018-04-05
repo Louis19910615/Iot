@@ -2,10 +2,10 @@ package com.mmc.lot.ble.analysis;
 
 import android.util.Log;
 
-import com.mmc.lot.bean.ShowToastBean;
-import com.mmc.lot.ble.device.DeviceInfo;
-import com.mmc.lot.eventbus.AnalysisEvent;
-import com.mmc.lot.eventbus.UploadTemperaturesEvent;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.ble.AnalysisEvent;
+import com.mmc.lot.eventbus.ble.UploadTemperaturesEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 
@@ -59,19 +59,21 @@ public class Analysis {
                 // 上传温度数据
                 case 0x53:
                     uploadTemperatures(analysisEvent.bytes);
-                    if (DeviceInfo.getInstance().getTempDatas().size() < 3) {
+                    if (DataCenter.getInstance().getDeviceInfo().getTemperatureDatas().size() < 3) {
                         for (int i = 0; i < 20; i++) {
-                            DeviceInfo.getInstance().addTempData(28.45, 2);
+                            DataCenter.SetDeviceInfo.addTemperatureData(28.45);
                         }
                     }
-                    EventBus.getDefault().post(new UploadTemperaturesEvent(DeviceInfo.getInstance().getDeviceAddress(), false));
-                    EventBus.getDefault().post(new ShowToastBean("数据接受成功, 请点击完成"));
+                    EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo()
+                            .getDeviceAddress(),
+                            false));
+                    EventBus.getDefault().post(new ShowToastEvent("数据接受成功, 请点击完成"));
 
                     // TODO 服务端上传数据
                     break;
                 case 0x73:
                     uploadTemperatures(analysisEvent.bytes);
-                    EventBus.getDefault().post(new UploadTemperaturesEvent(DeviceInfo.getInstance().getDeviceAddress(), false));
+                    EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
                     break;
 
                 // 查询温度记录间隔
@@ -159,9 +161,9 @@ public class Analysis {
             data[1] = bytes[2 * i + 1 + 4];
             int dataInt = DataTransfer.byte2short(data);
             Log.e(TAG, "dataInt is " + dataInt);
-            // TODO 添加进入设备管理 插入位置为offset + i
+            // TODO 添加进入设备管理 插入位置为offset/2 + i
 
-            DeviceInfo.getInstance().addTempData(dataInt / 10.0, (offsetInt + i));
+            DataCenter.SetDeviceInfo.addTemperatureData(dataInt / 10.0);
         }
     }
 

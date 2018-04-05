@@ -9,11 +9,11 @@ import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanCallbackCompat
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanFilterCompat;
 import com.blakequ.bluetooth_manager_lib.scan.bluetoothcompat.ScanResultCompat;
 import com.mmc.lot.IotApplication;
-import com.mmc.lot.bean.ShowToastBean;
-import com.mmc.lot.ble.device.DeviceInfo;
-import com.mmc.lot.eventbus.ConnectEvent;
-import com.mmc.lot.eventbus.ScanWithAddressEvent;
-import com.mmc.lot.eventbus.ScanWithNameEvent;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.ble.ConnectEvent;
+import com.mmc.lot.eventbus.ble.ScanWithAddressEvent;
+import com.mmc.lot.eventbus.ble.ScanWithNameEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.orhanobut.logger.Logger;
 
 import org.greenrobot.eventbus.EventBus;
@@ -67,7 +67,7 @@ public class Scanner {
             @Override
             public void onScanResult(int callbackType, ScanResultCompat result) {
                 super.onScanResult(callbackType, result);
-                EventBus.getDefault().post(new ShowToastBean("扫描成功"));
+                EventBus.getDefault().post(new ShowToastEvent("扫描成功"));
 
                 stopScan();
                 Log.e(TAG, "scan device is " + result.getLeDevice().getName()
@@ -75,8 +75,8 @@ public class Scanner {
                 if (scanResultCompat == null) {
                     Logger.e(TAG, "onScanResult send getLeDevice");
                     scanResultCompat = result;
-                    DeviceInfo.getInstance().setDeviceAddress(result.getLeDevice().getAddress());
-                    DeviceInfo.getInstance().setDeviceName(result.getLeDevice().getName());
+                    DataCenter.SetDeviceInfo.setDeviceAddress(result.getLeDevice().getAddress());
+                    DataCenter.SetDeviceInfo.setDeviceName(result.getLeDevice().getName());
                     EventBus.getDefault().post(new ConnectEvent(result.getLeDevice().getAddress()));
                 }
             }

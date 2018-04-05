@@ -1,6 +1,7 @@
 package com.mmc.lot.bean;
 
 /**
+ * response enter.
  * Created by zhangzd on 2018/3/24.
  */
 

@@ -7,23 +7,22 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
-import com.mmc.lot.bean.GetMessageEvent;
-import com.mmc.lot.bean.ResetTagEvent;
-import com.mmc.lot.bean.ShowToastBean;
-import com.mmc.lot.bean.SyncTimeEvent;
+import com.mmc.lot.eventbus.ble.GetMessageEvent;
+import com.mmc.lot.eventbus.ble.ResetTagEvent;
+import com.mmc.lot.eventbus.ble.SyncTimeEvent;
 import com.mmc.lot.ble.ServiceUuidConstant;
-import com.mmc.lot.eventbus.AnalysisEvent;
-import com.mmc.lot.eventbus.ConnectEvent;
-import com.mmc.lot.eventbus.DisConnectEvent;
-import com.mmc.lot.eventbus.EnableEvent;
-import com.mmc.lot.eventbus.UploadTemperaturesEvent;
+import com.mmc.lot.eventbus.ble.AnalysisEvent;
+import com.mmc.lot.eventbus.ble.ConnectEvent;
+import com.mmc.lot.eventbus.ble.DisConnectEvent;
+import com.mmc.lot.eventbus.ble.EnableEvent;
+import com.mmc.lot.eventbus.ble.UploadTemperaturesEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
@@ -132,7 +131,7 @@ public class ConnectOne {
             public void onConnectionStateChange(BluetoothGatt gatt, final int status, int newState) {
                 super.onConnectionStateChange(gatt, status, newState);
                 if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
-                    EventBus.getDefault().post(new ShowToastBean("连接成功"));
+                    EventBus.getDefault().post(new ShowToastEvent("连接成功"));
                     gatt.discoverServices();
                 } else if (status == 133) {
                         Logger.e(TAG, "-----133-----");

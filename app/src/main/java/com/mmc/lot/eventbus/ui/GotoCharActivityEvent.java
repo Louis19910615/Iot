@@ -1,4 +1,4 @@
-package com.mmc.lot.eventbus;
+package com.mmc.lot.eventbus.ui;
 
 /**
  * Created by louis on 2018/4/2.

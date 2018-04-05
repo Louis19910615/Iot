@@ -53,4 +53,24 @@ public class DateParseUtil {
         return dateBytes;
     }
 
+    public static String format(int yearHigh, int yearLow, int month, int day, int hour, int min, int sec) {
+        String yearStr = int2Str(yearHigh) + int2Str(yearLow);
+        String monthStr = int2Str(month);
+        String dayStr = int2Str(day);
+        String hourStr = int2Str(hour);
+        String minStr = int2Str(min);
+        String secStr = int2Str(sec);
+
+        return yearStr + "/" + monthStr + "/" + dayStr + " " + hourStr + ":" + minStr + ":" + secStr;
+
+    }
+
+    private static String int2Str(int num) {
+        if (num < 10) {
+            return "0" + String.valueOf(num);
+        } else {
+            return String.valueOf(num);
+        }
+    }
+
 }

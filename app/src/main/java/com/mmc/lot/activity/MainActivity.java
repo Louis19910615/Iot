@@ -31,18 +31,17 @@ import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
-import com.mmc.lot.bean.ShowToastBean;
 import com.mmc.lot.bean.TransBean;
 import com.mmc.lot.ble.analysis.Analysis;
 import com.mmc.lot.ble.connect.ConnectOne;
-import com.mmc.lot.ble.device.DeviceInfo;
 import com.mmc.lot.ble.receiver.BleActionStateChangedReceiver;
 import com.mmc.lot.ble.scan.Scanner;
-import com.mmc.lot.eventbus.BleStateOnEvent;
-import com.mmc.lot.eventbus.DisConnectEvent;
-import com.mmc.lot.eventbus.GotoCharActivityEvent;
-import com.mmc.lot.eventbus.ScanWithAddressEvent;
-import com.mmc.lot.eventbus.ScanWithNameEvent;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.ble.BleStateOnEvent;
+import com.mmc.lot.eventbus.ble.DisConnectEvent;
+import com.mmc.lot.eventbus.ui.GotoCharActivityEvent;
+import com.mmc.lot.eventbus.ble.ScanWithAddressEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.net.Repository;
 import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.PermissionConstant;
@@ -270,7 +269,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
+                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(),
+                        DataCenter.getInstance().getDeviceInfo().getTemperatureDatas());
 
 //                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
             }
@@ -318,7 +318,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             if (baseBean.getC() == 1) {
                                 Toast.makeText(MainActivity.this, "提交成功", Toast.LENGTH_SHORT).show();
                                 EventBus.getDefault().post(new GotoCharActivityEvent());
-                                EventBus.getDefault().post(new DisConnectEvent(DeviceInfo.getInstance().getDeviceAddress()));
+                                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo
+                                        ().getDeviceAddress()));
 //                                sendFormData();
                             } else {
                                 Toast.makeText(MainActivity.this, "提交失败", Toast.LENGTH_SHORT).show();
@@ -498,8 +499,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void showToast(ShowToastBean showToastBean) {
-        Toast.makeText(this, showToastBean.getMessage(), Toast.LENGTH_SHORT).show();
+    public void showToast(ShowToastEvent showToastEvent) {
+        Toast.makeText(this, showToastEvent.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private boolean startCheckPermission() {
