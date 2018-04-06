@@ -9,9 +9,16 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.FormBean;
+import com.mmc.lot.ble.connect.ConnectOne;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.ble.SaveManifestEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.net.Request;
+
+import org.greenrobot.eventbus.EventBus;
 
 /**
  * Created by zhangzd on 2018/4/4.
@@ -75,7 +82,13 @@ public class OrderActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View v) {
         if (v == tvFinish) {
             if (checkParsms()) {
-                geneTransBean();
+                setLogisticsInfo();
+                ConnectOne.getInstance().setManifestStr(new Gson().toJson(DataCenter.getInstance().getLogisticsInfo()));
+                ConnectOne.getInstance().resetSaveNum();
+                EventBus.getDefault().post(new SaveManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                this.finish();
+            } else {
+                EventBus.getDefault().post(new ShowToastEvent("请补全相关信息"));
             }
         }
     }
@@ -96,24 +109,43 @@ public class OrderActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
-    private void geneTransBean() {
-        FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
-        transBean.setOrderId(etOrder.getText().toString());
-        transBean.setLogisticsCompany(etCompany.getText().toString());
-        //收货人
-        FormBean.TransportInformationBean.ConsigneeBean consignee = new FormBean.TransportInformationBean.ConsigneeBean(etTakeName.getText().toString(), etTakeAddr.getText().toString(), etTakePhone.getText().toString());
-        transBean.setConsignee(consignee);
-        //托运人
-        FormBean.TransportInformationBean.ConsignorBean consignor = new FormBean.TransportInformationBean.ConsignorBean(etSendName.getText().toString(), etSendAddr.getText().toString(), etSendPhone.getText().toString());
-        transBean.setConsignor(consignor);
-        //产品
-        FormBean.TransportInformationBean.ProductBean productBean = new FormBean.TransportInformationBean.ProductBean(etGoodCompany.getText().toString(), etGood.getText().toString());
-        transBean.setProduct(productBean);
+//    private void geneTransBean() {
+//        FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
+//        transBean.setOrderId(etOrder.getText().toString());
+//        transBean.setLogisticsCompany(etCompany.getText().toString());
+//        //收货人
+//        FormBean.TransportInformationBean.ConsigneeBean consignee = new FormBean.TransportInformationBean.ConsigneeBean(etTakeName.getText().toString(), etTakeAddr.getText().toString(), etTakePhone.getText().toString());
+//        transBean.setConsignee(consignee);
+//        //托运人
+//        FormBean.TransportInformationBean.ConsignorBean consignor = new FormBean.TransportInformationBean.ConsignorBean(etSendName.getText().toString(), etSendAddr.getText().toString(), etSendPhone.getText().toString());
+//        transBean.setConsignor(consignor);
+//        //产品
+//        FormBean.TransportInformationBean.ProductBean productBean = new FormBean.TransportInformationBean.ProductBean(etGoodCompany.getText().toString(), etGood.getText().toString());
+//        transBean.setProduct(productBean);
+//
+//
+//        FormBean.TransportInformationBean.ValidRangeBean validRangeBean = new FormBean.TransportInformationBean.ValidRangeBean(Integer.parseInt(min), Integer.parseInt(max));
+//        transBean.setValidRange(validRangeBean);
+//
+//        Request.setTransBean(transBean);
+//    }
 
+    private void setLogisticsInfo() {
+        DataCenter.SetLogisticsInfo.setLogisticsId(etOrder.getText().toString());
+        DataCenter.SetLogisticsInfo.setLogisticsCompany(etOrder.getText().toString());
 
-        FormBean.TransportInformationBean.ValidRangeBean validRangeBean = new FormBean.TransportInformationBean.ValidRangeBean(Integer.parseInt(min), Integer.parseInt(max));
-        transBean.setValidRange(validRangeBean);
+        DataCenter.SetLogisticsInfo.setShipperName(etSendName.getText().toString());
+        DataCenter.SetLogisticsInfo.setShipperAddress(etSendAddr.getText().toString());
+        DataCenter.SetLogisticsInfo.setShipperTel(etSendPhone.getText().toString());
 
-        Request.setTransBean(transBean);
+        DataCenter.SetLogisticsInfo.setConsigneeName(etTakeName.getText().toString());
+        DataCenter.SetLogisticsInfo.setConsigneeAddress(etTakeAddr.getText().toString());
+        DataCenter.SetLogisticsInfo.setConsigneeTel(etTakePhone.getText().toString());
+
+        DataCenter.SetLogisticsInfo.setProductCategory(etGoodCompany.getText().toString());
+        DataCenter.SetLogisticsInfo.setProductName(etGood.getText().toString());
+
+        DataCenter.SetLogisticsInfo.setMinTemperature(Integer.parseInt(min));
+        DataCenter.SetLogisticsInfo.setMaxTemperature(Integer.parseInt(max));
     }
 }

@@ -7,7 +7,13 @@ import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.TagBean;
 import com.mmc.lot.bean.TempBean;
 import com.mmc.lot.bean.TransBean;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.http.GetTransDataEvent;
 import com.mmc.lot.util.SharePreUtils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +51,7 @@ public class Repository {
     }
 
     private Repository() {
+        EventBus.getDefault().register(this);
         initOkHttp();
         initRetrofit();
     }
@@ -111,55 +118,42 @@ public class Repository {
 
     /**
      * 获取物流信息
-     *
-     * @return
-     * @param mac
-     * @param orderId
      */
-    public Observable<TransBean> getTransData(String mac, String orderId) {
-        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+    public Observable<TransBean> getTransData(GetTransDataEvent getTransDataEvent) {
+//        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
 
         Map<String, String> map = new HashMap<>();
-        map.put("token", token);
-        map.put("tagid", mac);
+        map.put("token", getTransDataEvent.getToken());
+        map.put("tagid", getTransDataEvent.getTagId());
 //        map.put("orderId", orderId);
         return apiService.getTransData(map);
     }
 
     /**
-     * "tagID": "aabbccddeeff",
-     * "mac": "00:11:22:33:44:55",
-     * "startTime": "2018/03/04 15:00:00",
-     * "intervalTime": 1,
-     * "energy": 100,
-     * "gps": "123,789"
-     *
+     * 上传温度数据
      * @return
-     * @param mac
-     * @param orderId
-     * @param tempareture
      */
-    public Observable<BaseBean> sendTagData(String mac, String orderId, String tempareture, List<Double> tempData) {
+    public Observable<BaseBean> sendTagData() {
 
         Gson gson = new Gson();
 
         TagBean bean = new TagBean();
-        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
+        bean.setToken(DataCenter.getInstance().getUserInfo().getToken());
 
         TagBean.TagInformationBean infoBean = new TagBean.TagInformationBean();
-        infoBean.setMac("0:11:22:33:44:55");
-        infoBean.setEnergy(100);
+        infoBean.setMac(DataCenter.getInstance().getDeviceInfo().getDeviceAddress());
+        infoBean.setEnergy(DataCenter.getInstance().getDeviceInfo().getRemainingBattery());
         // TODO 获取GPS导航
-        infoBean.setGps("123,789");
-        infoBean.setIntervalTime(1);
-        infoBean.setStartTime("2018/03/04 15:00:00");
-        infoBean.setTagID(mac);
-        List<Double> temp = new ArrayList<Double>() {
-        };
-        temp.addAll(tempData);
-//        temp.add(30.11);
-//        temp.add(-20.31);
-        bean.setTagData(temp);
+        infoBean.setGps("113.92,22.52");
+        infoBean.setIntervalTime(DataCenter.getInstance().getDeviceInfo().getTimeInterval());
+        infoBean.setStartTime(DataCenter.getInstance().getDeviceInfo().getStarTime());
+        infoBean.setTagID(DataCenter.getInstance().getDeviceInfo().getTagId());
+//        List<Double> temp = new ArrayList<Double>() {
+//        };
+//        temp.addAll(tempData);
+////        temp.add(30.11);
+////        temp.add(-20.31);
+        bean.setTagData(DataCenter.getInstance().getDeviceInfo().getTemperatureDatas());
 
         bean.setTagInformation(infoBean);
 
@@ -179,9 +173,8 @@ public class Repository {
 
     /**
      * 绑定tagID
-     * @param tagid
      */
-    public Observable<BindBeanParent> bindData(String tagid) {
+    public Observable<BindBeanParent> bindData() {
         Map<String, String> map = new HashMap<>();
 //        BindBean bean = new BindBean();
 //        bean.setToken(SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
@@ -190,8 +183,8 @@ public class Repository {
 //        bean.setTransportInformation(transBean);
 //        BindBean.TagInformationBean tagBean = new BindBean.TagInformationBean("aabbccddeeff");
 //        bean.setTagInformation(tagBean);
-        map.put("token", SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, ""));
-        map.put("tagid", tagid);
+        map.put("token", DataCenter.getInstance().getUserInfo().getToken());
+        map.put("tagid", DataCenter.getInstance().getDeviceInfo().getTagId());
 
         return apiService.bindData(map);
     }

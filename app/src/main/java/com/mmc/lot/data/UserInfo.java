@@ -1,5 +1,7 @@
 package com.mmc.lot.data;
 
+import com.mmc.lot.util.IntentUtils;
+
 /**
  * Created by liushuaizheng on 2018/4/5.
  */
@@ -12,6 +14,9 @@ public class UserInfo {
     private double longitude;
     // gps 纬度
     private double latitude;
+
+    // 角色
+    private int actor; // 1 --- 发货方， 2 ---- 收货方， 3 --- 快递员
 
     public UserInfo() {
 
@@ -28,6 +33,18 @@ public class UserInfo {
 
     public void setToken(String token) {
         this.token = token;
+        //send
+        if (token.contains(IntentUtils.providerRole)) {
+            actor = 1;
+        }
+        //take
+        else if (token.contains(IntentUtils.clientRole)) {
+            actor = 2;
+        }
+        //快递员
+        else if (token.contains(IntentUtils.courierRole)) {
+            actor = 3;
+        }
     }
 
     public String getUserName() {
@@ -52,5 +69,9 @@ public class UserInfo {
 
     public void setLatitude(double latitude) {
         this.latitude = latitude;
+    }
+
+    public int getActor() {
+        return this.actor;
     }
 }

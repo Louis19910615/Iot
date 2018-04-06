@@ -44,6 +44,7 @@ public class DateParseUtil {
             int sec = Integer.valueOf(dateStr.substring(12, 14));
             dateBytes[6] = (byte) sec;
 
+
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }

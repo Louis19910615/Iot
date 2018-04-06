@@ -1,13 +1,32 @@
 package com.mmc.lot.net;
 
+import android.util.EventLog;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.activity.MainActivity;
 import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
 import com.mmc.lot.bean.TempBean;
+import com.mmc.lot.bean.TransBean;
+import com.mmc.lot.ble.connect.ConnectOne;
+import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.data.DataCenterUtil;
+import com.mmc.lot.eventbus.ble.ActivateEvent;
+import com.mmc.lot.eventbus.ble.DisConnectEvent;
+import com.mmc.lot.eventbus.ble.SaveManifestEvent;
+import com.mmc.lot.eventbus.http.GetTransDataEvent;
+import com.mmc.lot.eventbus.http.SendFormDataEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
+import com.mmc.lot.util.IntentUtils;
+import com.mmc.lot.util.RequestDataTransfer;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 
@@ -24,10 +43,107 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Request {
 
-    public static FormBean.TransportInformationBean transBean = new FormBean.TransportInformationBean();
+    private static final String TAG = "Request";
 
-    public static void setTransBean(FormBean.TransportInformationBean tranBean) {
-        transBean = tranBean;
+    private volatile static Request sInstance;
+
+    private Request () {
+        EventBus.getDefault().register(this);
+    }
+
+    public static Request getInstance() {
+        if (sInstance == null) {
+            synchronized (Request.class) {
+                if (sInstance == null) {
+                    sInstance = new Request();
+                }
+            }
+        }
+
+        return sInstance;
+    }
+
+    // 上传表单信息
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    public void sendFormData(SendFormDataEvent sendFormDataEvent) {
+        //表单数据bean(tagid, orderId, safttemp)
+        FormBean bean = RequestDataTransfer.getFormBean();
+
+        Repository.init().sendFormData(bean)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BaseBean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(BaseBean baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Log.e(TAG, "提交表单成功");
+                                sendBindData();
+                            } else {
+                                // TODO 提交表单失败
+                                Log.e(TAG, "提交表单失败");
+                                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                                EventBus.getDefault().post(new ShowToastEvent("提交表单失败，请重试"));
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("Request", "error:" + e.getMessage());
+                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                        EventBus.getDefault().post(new ShowToastEvent("提交表单失败，请重试"));
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
+    private void sendBindData() {
+        Repository.init().bindData()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<BindBeanParent>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(BindBeanParent baseBean) {
+                        if (baseBean != null) {
+                            if (baseBean.getC() == 1) {
+                                Log.d(TAG, "send bind data success");
+                                EventBus.getDefault().post(new ActivateEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                            } else {
+                                Log.d(TAG, "send bind data failed");
+                                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                                EventBus.getDefault().post(new ShowToastEvent("绑定表单失败，请重试"));
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("Request", "error:" + e.getMessage());
+                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                        EventBus.getDefault().post(new ShowToastEvent("绑定表单失败，请重试"));
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     private void requestTempData() {
@@ -45,10 +161,10 @@ public class Request {
                         if (tempBean != null) {
                             if (tempBean.getC() == 1) {
                                 Toast.makeText(IotApplication.getContext(), "温度请求成功", Toast.LENGTH_SHORT).show();
-                                ;
+
                             } else {
                                 Toast.makeText(IotApplication.getContext(), tempBean.getM(), Toast.LENGTH_SHORT).show();
-                                ;
+
                             }
                         }
                     }
@@ -56,7 +172,7 @@ public class Request {
                     @Override
                     public void onError(Throwable e) {
                         Toast.makeText(IotApplication.getContext(), "温度请求失败", Toast.LENGTH_SHORT).show();
-                        ;
+
 
                     }
 
@@ -97,64 +213,64 @@ public class Request {
                 });
     }
 
-    private void sendFormData() {
-        Repository.init().sendFormData(new FormBean())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<BaseBean>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+//    private void sendFormData() {
+//        Repository.init().sendFormData(new FormBean())
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<BaseBean>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(BaseBean baseBean) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        Log.e("zzDebug", "error:" + e.getMessage());
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//
+//                    }
+//                });
+//    }
 
-                    }
-
-                    @Override
-                    public void onNext(BaseBean baseBean) {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e("zzDebug", "error:" + e.getMessage());
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-    }
-
-    private void sendBindData(String tagid) {
-        Repository.init().bindData(tagid)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<BindBeanParent>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(BindBeanParent baseBean) {
-                        if (baseBean != null) {
-                            if (baseBean.getC() == 1) {
-                                Log.d("zzDebug", "success");
-
-                            } else {
-                                Log.d("zzDebug", "failed");
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e("zzDebug", "error:" + e.getMessage());
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-    }
+//    private void sendBindData(String tagid) {
+//        Repository.init().bindData(tagid)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Observer<BindBeanParent>() {
+//                    @Override
+//                    public void onSubscribe(Disposable d) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(BindBeanParent baseBean) {
+//                        if (baseBean != null) {
+//                            if (baseBean.getC() == 1) {
+//                                Log.d("zzDebug", "success");
+//
+//                            } else {
+//                                Log.d("zzDebug", "failed");
+//                            }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//                        Log.e("zzDebug", "error:" + e.getMessage());
+//                    }
+//
+//                    @Override
+//                    public void onComplete() {
+//
+//                    }
+//                });
+//    }
 }

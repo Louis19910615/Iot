@@ -6,6 +6,9 @@ package com.mmc.lot.data;
 
 public class LogisticsInfo {
 
+    // 物流号
+    private String logisticsId;
+
     // 物流公司
     private String logisticsCompany;
 
@@ -35,6 +38,14 @@ public class LogisticsInfo {
 
     public LogisticsInfo() {
 
+    }
+
+    public String getLogisticsId() {
+        return logisticsId;
+    }
+
+    public void setLogisticsId(String logisticsId) {
+        this.logisticsId = logisticsId;
     }
 
     public String getLogisticsCompany() {

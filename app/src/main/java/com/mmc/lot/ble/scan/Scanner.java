@@ -75,6 +75,10 @@ public class Scanner {
                 if (scanResultCompat == null) {
                     Logger.e(TAG, "onScanResult send getLeDevice");
                     scanResultCompat = result;
+                    // clear related info
+                    DataCenter.getInstance().clearDeviceInfo();
+                    DataCenter.getInstance().clearLogisticsInfo();
+                    // set related info
                     DataCenter.SetDeviceInfo.setDeviceAddress(result.getLeDevice().getAddress());
                     DataCenter.SetDeviceInfo.setDeviceName(result.getLeDevice().getName());
                     EventBus.getDefault().post(new ConnectEvent(result.getLeDevice().getAddress()));

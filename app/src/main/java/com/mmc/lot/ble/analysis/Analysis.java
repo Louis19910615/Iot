@@ -1,19 +1,33 @@
 package com.mmc.lot.ble.analysis;
 
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.eventbus.ble.AnalysisEvent;
+import com.mmc.lot.eventbus.ble.DisConnectEvent;
+import com.mmc.lot.eventbus.ble.GetMessageEvent;
+import com.mmc.lot.eventbus.ble.QueryIntervalEvent;
+import com.mmc.lot.eventbus.ble.ReadManifestEvent;
+import com.mmc.lot.eventbus.ble.SaveManifestEvent;
 import com.mmc.lot.eventbus.ble.UploadTemperaturesEvent;
+import com.mmc.lot.eventbus.http.GetTransDataEvent;
+import com.mmc.lot.eventbus.http.SendFormDataEvent;
+import com.mmc.lot.eventbus.http.SendTagDataEvent;
+import com.mmc.lot.eventbus.ui.GotoCharActivityEvent;
 import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
+import com.mmc.lot.util.DateParseUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by louis on 2018/3/25.
@@ -64,12 +78,13 @@ public class Analysis {
                             DataCenter.SetDeviceInfo.addTemperatureData(28.45);
                         }
                     }
+                    Log.e(TAG, "数据接受成功");
                     EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo()
                             .getDeviceAddress(),
                             false));
-                    EventBus.getDefault().post(new ShowToastEvent("数据接受成功, 请点击完成"));
+                    EventBus.getDefault().post(new SendTagDataEvent());
+//                    EventBus.getDefault().post(new ShowToastEvent("数据接受成功, 请点击完成"));
 
-                    // TODO 服务端上传数据
                     break;
                 case 0x73:
                     uploadTemperatures(analysisEvent.bytes);
@@ -96,6 +111,7 @@ public class Analysis {
                 case 0x77:
                 case 0x57:
                     readManifest(analysisEvent.bytes);
+                    EventBus.getDefault().post(new ReadManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
                     break;
 
                 // 服务器确认
@@ -122,29 +138,75 @@ public class Analysis {
         System.out.print(Arrays.toString(bytes));
         if (bytes[1] == (byte) 0xff) {
 
-            // TODO eventbus 同步时间失败
             Log.e(TAG, "同步时间失败");
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("同步时间失败，请重试"));
 
         } else {
             // TODO eventbus 同步时间成功
             Log.e(TAG, "同步时间成功");
+            // year
+            int yearHighInt = DataTransfer.byte2int(bytes[2]);
+            int yearLowInt = DataTransfer.byte2int(bytes[3]);
+            // month
+            int monthInt = DataTransfer.byte2int(bytes[4]);
+            // day
+            int dayInt = DataTransfer.byte2int(bytes[5]);
+            // hour
+            int hourInt = DataTransfer.byte2int(bytes[6]);
+            // min
+            int minInt = DataTransfer.byte2int(bytes[7]);
+            // sec
+            int secInt = DataTransfer.byte2int(bytes[8]);
 
+            String startTime = DateParseUtil.format(yearHighInt, yearLowInt, monthInt, dayInt, hourInt, minInt, secInt);
+            DataCenter.SetDeviceInfo.setStartTime(startTime);
+            Log.e(TAG, "Start time is " + startTime);
+            int actor = DataCenter.getInstance().getUserInfo().getActor();
+            if (actor == 1) {
+                EventBus.getDefault().post(new GetMessageEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            } else {
+                if (actor == 2) {
+
+                } else {
+                    if (actor == 3) {
+                        EventBus.getDefault().post(new QueryIntervalEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                    }
+                }
+            }
         }
     }
 
     private void getMessage(byte[] bytes) {
         System.out.print(Arrays.toString(bytes));
         if (bytes[0] == 0x12) {
-            // TODO eventbus 获取信息失败
             Log.e(TAG, "获取信息失败");
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("获取信息失败，请重试"));
         } else {
-            // TODO eventbus 获取信息成功
             Log.e(TAG, "获取信息成功");
+            byte[] remainingBatteryBytes = {bytes[8], bytes[9]};
+            int remainingBattery = DataTransfer.byte2short(remainingBatteryBytes);
+            Log.e(TAG, "remainingBattery is " + remainingBattery);
+            DataCenter.SetDeviceInfo.setRemainingBattery(remainingBattery);
+            int actor = DataCenter.getInstance().getUserInfo().getActor();
+            if (actor == 1) {
+                EventBus.getDefault().post(new SendFormDataEvent());
+            } else {
+                if (actor == 2) {
+
+                } else if (actor == 3) {
+                    EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), true));
+                } else {
+
+                }
+            }
         }
     }
 
     private void uploadTemperatures(byte[] bytes) {
         System.out.print(Arrays.toString(bytes));
+
         // data length
         int datalength = DataTransfer.byte2int(bytes[1]);
         // offset
@@ -171,13 +233,18 @@ public class Analysis {
         System.out.print(Arrays.toString(bytes));
         //
         if (bytes[1] == (byte) 0xff) {
-            // TODO 获取温度间隔失败
+            Log.e(TAG, "获取温度时间间隔失败，请重试");
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("获取时间间隔失败，请重试"));
             return;
         }
         // data
         byte[] data = new byte[]{bytes[2], bytes[3]};
         int dataInt = DataTransfer.byte2short(data);
-        // TODO 记录温度记录间隔
+        DataCenter.SetDeviceInfo.setTimeInterval(dataInt);
+        Log.e(TAG, "获取温度时间间隔成功");
+        EventBus.getDefault().post(new GetMessageEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+
     }
 
     private void setInterval(byte[] bytes) {
@@ -193,18 +260,27 @@ public class Analysis {
     private void saveManifest(byte[] bytes) {
         System.out.print(Arrays.toString(bytes));
         if (bytes[1] == 0x00) {
-            // TODO 保存货单信息成功
+            EventBus.getDefault().post(new SaveManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
         } else {
-            // TODO 保存货单信息失败
+            Log.e(TAG, "保存货单信息失败");
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
         }
     }
 
+    private List<Byte> manifest = new ArrayList<>();
     private void readManifest(byte[] bytes) {
         System.out.print(Arrays.toString(bytes));
         if (bytes[1] == (byte) 0xff) {
-            // TODO 读取货单信息失败
+            Log.e(TAG, "读取货单信息失败");
+            EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(),
+                    DataCenter.getInstance().getUserInfo().getToken()));
             return;
+        } else {
+            // TODO 读取货单信息成功
+//            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+//            EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息"));
         }
+
 
         // data length
         int datalength = DataTransfer.byte2int(bytes[1]);
@@ -213,18 +289,54 @@ public class Analysis {
         int offsetInt = DataTransfer.byte2short(offset);
         // TODO 乱序
         // data
-        byte[] data = new byte[datalength];
+//        byte[] data = new byte[datalength];
         for (int i = 0; i < datalength; i++) {
-            data[i] = bytes[i + 4];
+//            data[i] = bytes[i + 4];
             // TODO 添加进入读取货单信息 插入位置为offset
+            manifest.add(bytes[i + 4]);
+        }
+        if (bytes[0] == 0x57) {
+            byte[] manifestBytes = new byte[manifest.size()];
+            for (int i = 0; i < manifest.size(); i ++) {
+                manifestBytes[i] = manifest.get(i);
+            }
+            try {
+                String manifestStr = new String(manifestBytes, "UTF-8");
+                Log.e(TAG, "manifest is " + manifestStr);
+                DataCenter.getInstance().setLogisticsInfo(manifestStr);
+                manifest.clear();
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息:" + manifestStr));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                EventBus.getDefault().post(new ShowToastEvent("异常断开，请重试。"));
+            }
         }
     }
 
     private void activate(byte[] bytes) {
         if (bytes[1] == 0x00) {
-            // TODO 服务器确认成功
+            int actor = DataCenter.getInstance().getUserInfo().getActor();
+            if (actor == 1) {
+                EventBus.getDefault().post(new ShowToastEvent("已完成"));
+                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            } else {
+                if (actor == 2) {
+
+                } else {
+                    if (actor == 3) {
+                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                        EventBus.getDefault().post(new GotoCharActivityEvent());
+                    } else {
+
+                    }
+                }
+            }
         } else {
             //TODO 服务器确认失败
+            EventBus.getDefault().post(new ShowToastEvent("与Tag确认失败，请重试"));
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
         }
     }
 

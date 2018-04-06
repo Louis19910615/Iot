@@ -15,6 +15,7 @@ public class DeviceInfo {
     private String deviceName;
     private String category;
     private String description;
+    private String tagId;
 
     public DeviceInfo() {
 
@@ -34,6 +35,7 @@ public class DeviceInfo {
 
     public void setDeviceAddress(String deviceAddress) {
         this.deviceAddress = deviceAddress;
+        this.tagId = deviceAddress.replace(":", "");
     }
 
     public int getRemainingBattery() {
@@ -82,5 +84,9 @@ public class DeviceInfo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTagId() {
+        return this.tagId;
     }
 }

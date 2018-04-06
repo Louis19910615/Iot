@@ -3,11 +3,16 @@ package com.mmc.lot.util;
 import android.content.Context;
 import android.content.Intent;
 
+import com.mmc.lot.activity.ChartActivity2;
 import com.mmc.lot.activity.ConfirmActivity;
 import com.mmc.lot.activity.LoginActivity;
 import com.mmc.lot.activity.MainActivity;
+import com.mmc.lot.activity.OrderActivity;
 import com.mmc.lot.activity.SendDetailActivity;
 import com.mmc.lot.bean.TransBean;
+
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 /**
  * Created by zhangzd on 2018/3/31.
@@ -64,5 +69,8 @@ public class IntentUtils {
         context.startActivity(intent);
     }
 
-
+    public static void startOrderActivity(Context context) {
+        Intent intent = new Intent(context, OrderActivity.class);
+        context.startActivity(intent);
+    }
 }

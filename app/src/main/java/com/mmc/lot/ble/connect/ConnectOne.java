@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.os.Handler;
+import android.util.EventLog;
 import android.util.Log;
 
 import com.blakequ.bluetooth_manager_lib.connect.BluetoothConnectManager;
@@ -13,8 +14,12 @@ import com.blakequ.bluetooth_manager_lib.connect.BluetoothSubScribeData;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.eventbus.ble.GetMessageEvent;
+import com.mmc.lot.eventbus.ble.QueryIntervalEvent;
+import com.mmc.lot.eventbus.ble.ReadManifestEvent;
 import com.mmc.lot.eventbus.ble.ResetTagEvent;
+import com.mmc.lot.eventbus.ble.SaveManifestEvent;
 import com.mmc.lot.eventbus.ble.SyncTimeEvent;
 import com.mmc.lot.ble.ServiceUuidConstant;
 import com.mmc.lot.eventbus.ble.AnalysisEvent;
@@ -22,6 +27,7 @@ import com.mmc.lot.eventbus.ble.ConnectEvent;
 import com.mmc.lot.eventbus.ble.DisConnectEvent;
 import com.mmc.lot.eventbus.ble.EnableEvent;
 import com.mmc.lot.eventbus.ble.UploadTemperaturesEvent;
+import com.mmc.lot.eventbus.http.GetTransDataEvent;
 import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
@@ -183,12 +189,26 @@ public class ConnectOne {
                 if (isSuccess) {
                     Log.e(TAG, "使能成功");
 //                    EventBus.getDefault().post(new ShowToastBean("使能成功"));
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            EventBus.getDefault().post(new UploadTemperaturesEvent(enableEvent.getDeviceAddress(), true));
+                    int actor = DataCenter.getInstance().getUserInfo().getActor();
+                    // send
+                    if (actor == 1) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                EventBus.getDefault().post(new UploadTemperaturesEvent(enableEvent.getDeviceAddress(), true));
+                            }
+                        }, 2000);
+                    } else {
+                        // take
+                        if (actor == 2) {
+
+                        } else {
+                            // 快递员
+                            if (actor == 3) {
+                                EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(), DataCenter.getInstance().getUserInfo().getToken()));
+                            }
                         }
-                    }, 2000);
+                    }
                 } else {
                     connectManager.disconnect(enableEvent.getDeviceAddress());
                 }
@@ -240,9 +260,10 @@ public class ConnectOne {
     }
 
     // 查询温度记录间隔
-    public boolean queryInterval(String deviceAddress) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean queryInterval(QueryIntervalEvent queryIntervalEvent) {
         byte[] data = new byte[]{0x04, 0x00, 0x04};
-        return write(deviceAddress, data);
+        return write(queryIntervalEvent.getDeviceAddress(), data);
     }
 
     // 设置温度记录间隔
@@ -258,34 +279,81 @@ public class ConnectOne {
         return write(deviceAddress, data);
     }
 
-    // 保存货单信息 data固定 = 14
-    public boolean saveManifest(String deviceAddress, String res) {
+    private String manifestStr;
+    public void setManifestStr(String manifestStr) {
+        this.manifestStr = manifestStr;
+    }
+
+    private int saveNum;
+    public void resetSaveNum() {
+        this.saveNum = 0;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean saveManifest(SaveManifestEvent saveManifestEvent) {
         // string --> byte[]
         try {
-            byte[] resBytes = res.getBytes("UTF8");
+            byte[] resBytes = manifestStr.getBytes("UTF-8");
             byte[] resByteOne = new byte[14];
             byte flag = 0x20;
 
-            for (int i = 0; i < resBytes.length; i = i * 14) {
+//            for (int i = 0; i < resBytes.length; i = i * 14) {
+            if (saveNum < resBytes.length) {
                 Arrays.fill(resByteOne, (byte) 0xff);
                 for (int j = 0; j < 14; j++) {
-                    if (i + j < resBytes.length) {
-                        resByteOne[j] = resBytes[i + j];
+                    if (saveNum + j < resBytes.length) {
+                        resByteOne[j] = resBytes[saveNum + j];
                     } else {
                         flag = 0x00;
                         break;
                     }
                 }
-                saveManifest(deviceAddress, resByteOne, flag, i);
-                i++;
+                saveManifest(saveManifestEvent.getDeviceAddress(), resByteOne, flag, saveNum);
+                saveNum++;
+                saveNum = saveNum * 14;
+            } else {
+                Log.e(TAG, "保存货单信息成功");
+                EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
             }
+//            }
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
+            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("设置运单信息错误，请重试"));
             return false;
         }
 
         return true;
     }
+
+    // 保存货单信息 data固定 = 14
+//    public boolean saveManifest(String deviceAddress, String res) {
+//        // string --> byte[]
+//        try {
+//            byte[] resBytes = res.getBytes("UTF-8");
+//            byte[] resByteOne = new byte[14];
+//            byte flag = 0x20;
+//
+//            for (int i = 0; i < resBytes.length; i = i * 14) {
+//                Arrays.fill(resByteOne, (byte) 0xff);
+//                for (int j = 0; j < 14; j++) {
+//                    if (i + j < resBytes.length) {
+//                        resByteOne[j] = resBytes[i + j];
+//                    } else {
+//                        flag = 0x00;
+//                        break;
+//                    }
+//                }
+//                saveManifest(deviceAddress, resByteOne, flag, i);
+//                i++;
+//            }
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     // 保存货单信息 data固定 = 14 单次
     private boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
@@ -316,9 +384,10 @@ public class ConnectOne {
     }
 
     // 读取货单信息
-    public boolean readManifest(String deviceAddress, boolean isFirst) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public boolean readManifest(ReadManifestEvent readManifestEvent) {
         byte[] data = new byte[3];
-        if (isFirst) {
+        if (readManifestEvent.getIsFirst()) {
             data[0] = 0x07;
             data[1] = 0x00;
             data[2] = 0x07;
@@ -327,10 +396,11 @@ public class ConnectOne {
             data[1] = 0x00;
             data[2] = 0x17;
         }
-        return write(deviceAddress, data);
+        return write(readManifestEvent.getDeviceAddress(), data);
     }
 
     // 服务器确认
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public boolean activate(String deviceAddress) {
         byte[] data = new byte[]{0x08, 0x00, 0x08};
         return write(deviceAddress, data);

@@ -5,6 +5,13 @@ import java.util.List;
 import android.provider.ContactsContract;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.mmc.lot.eventbus.ble.DisConnectEvent;
+import com.mmc.lot.eventbus.ui.ShowToastEvent;
+
+import org.greenrobot.eventbus.EventBus;
+
 /**
  * Created by liushuaizheng on 2018/4/5.
  */
@@ -42,6 +49,24 @@ public class DataCenter {
         deviceInfo = new DeviceInfo();
         userInfo = new UserInfo();
         logisticsInfo = new LogisticsInfo();
+    }
+
+    public void clearDeviceInfo() {
+        deviceInfo = new DeviceInfo();
+    }
+
+    public void clearLogisticsInfo() {
+        logisticsInfo = new LogisticsInfo();
+    }
+
+    public void setLogisticsInfo(String manifestStr) {
+        try {
+            logisticsInfo = new Gson().fromJson(manifestStr, LogisticsInfo.class);
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+            EventBus.getDefault().post(new DisConnectEvent(getDeviceInfo().getDeviceAddress()));
+            EventBus.getDefault().post(new ShowToastEvent("异常断开，请重试。"));
+        }
     }
 
     public DeviceInfo getDeviceInfo() {
@@ -150,6 +175,14 @@ public class DataCenter {
     }
 
     public static class SetLogisticsInfo {
+
+        // 物流号
+        public static void setLogisticsId(String logisticsId) {
+            LogisticsInfo logisticsInfo = DataCenter.getInstance().getLogisticsInfo();
+            logisticsInfo.setLogisticsId(logisticsId);
+            DataCenter.getInstance().setLogisticsInfo(logisticsInfo);
+        }
+
         // 物流公司
         public static void setLogisticsCompany(String logisticsCompany) {
             LogisticsInfo logisticsInfo = DataCenter.getInstance().getLogisticsInfo();
