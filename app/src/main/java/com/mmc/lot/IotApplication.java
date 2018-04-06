@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.util.LocationHelper;
 import com.uuzuche.lib_zxing.activity.ZXingLibrary;
 
 import org.greenrobot.eventbus.EventBus;
@@ -24,6 +25,7 @@ public class IotApplication extends Application {
         context = this;
         ZXingLibrary.initDisplayOpinion(this);
         init();
+        LocationHelper.getLocation();
     }
 
     public static Context getContext() {
