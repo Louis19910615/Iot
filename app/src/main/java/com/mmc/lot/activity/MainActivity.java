@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -495,11 +496,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 } else {
                                     if (actor == 2) {
                                         DataCenterUtil.parseTransBean(baseBean);
-                                        EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+                                            }
+                                        }, 2000);
                                     } else {
                                         if (actor == 3) {
                                             DataCenterUtil.parseTransBean(baseBean);
-                                            EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+                                            new Handler().postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+                                                }
+                                            }, 2000);
                                         } else {
                                             EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                                         }
@@ -523,9 +534,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.e(TAG, "物流信息请求失败");
-                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
-                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-                        EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));
+//                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+//                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+//                        EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));
+                        // TODO 修复好时间后，删除此逻辑
+                        int actor = DataCenter.getInstance().getUserInfo().getActor();
+                        if (actor == 1) {
+                            Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+                            IntentUtils.startOrderActivity(MainActivity.this);
+                        }
+                        if (actor == 3) {
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+                                }
+                            }, 2000);
+                        }
 
                     }
 
