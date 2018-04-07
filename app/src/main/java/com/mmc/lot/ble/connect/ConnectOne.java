@@ -190,18 +190,20 @@ public class ConnectOne {
                     Log.e(TAG, "使能成功");
 //                    EventBus.getDefault().post(new ShowToastBean("使能成功"));
                     int actor = DataCenter.getInstance().getUserInfo().getActor();
+                    Log.e(TAG, "actor is " + actor);
                     // send
                     if (actor == 1) {
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                EventBus.getDefault().post(new UploadTemperaturesEvent(enableEvent.getDeviceAddress(), true));
+                                Log.e(TAG, "开始从Tag获取货单信息");
+                                EventBus.getDefault().post(new ReadManifestEvent(enableEvent.getDeviceAddress(), true));
                             }
                         }, 2000);
                     } else {
                         // take
                         if (actor == 2) {
-
+                            EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(), DataCenter.getInstance().getUserInfo().getToken()));
                         } else {
                             // 快递员
                             if (actor == 3) {

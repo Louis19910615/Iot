@@ -85,7 +85,7 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
             }
         }
 
-        requestTempData(tagid);
+        requestTempData();
     }
 
     private String timeStamp2Date(long currentMission) {
@@ -94,8 +94,8 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
     }
 
 
-    private void requestTempData(String tagid) {
-        Repository.init().getTemp(tagid)
+    private void requestTempData() {
+        Repository.init().getTemp()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<TempBean>() {

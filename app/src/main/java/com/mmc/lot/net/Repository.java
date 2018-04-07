@@ -1,5 +1,8 @@
 package com.mmc.lot.net;
 
+import android.nfc.Tag;
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
@@ -51,7 +54,6 @@ public class Repository {
     }
 
     private Repository() {
-        EventBus.getDefault().register(this);
         initOkHttp();
         initRetrofit();
     }
@@ -106,13 +108,12 @@ public class Repository {
      * 获取温度
      *
      * @return
-     * @param tagid
      */
-    public Observable<TempBean> getTemp(String tagid) {
-        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+    public Observable<TempBean> getTemp() {
+        String token = DataCenter.getInstance().getUserInfo().getToken();
         Map<String, String> map = new HashMap<>();
         map.put("token", token);
-        map.put("tagid", tagid);
+        map.put("tagid", DataCenter.getInstance().getDeviceInfo().getTagId());
         return apiService.getTempData(map);
     }
 
@@ -121,7 +122,7 @@ public class Repository {
      */
     public Observable<TransBean> getTransData(GetTransDataEvent getTransDataEvent) {
 //        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
-
+        Log.e("Repository", "getTransData()" + getTransDataEvent.getToken() + getTransDataEvent.getTagId());
         Map<String, String> map = new HashMap<>();
         map.put("token", getTransDataEvent.getToken());
         map.put("tagid", getTransDataEvent.getTagId());

@@ -99,6 +99,8 @@ public class DataCenter {
             UserInfo userInfo = DataCenter.getInstance().getUserInfo();
             userInfo.setToken(token);
             DataCenter.getInstance().setUserInfo(userInfo);
+            int actor = DataCenter.getInstance().getUserInfo().getActor();
+            Log.e(TAG, "actor is " + actor);
         }
 
         public static void setUserName(String userName) {

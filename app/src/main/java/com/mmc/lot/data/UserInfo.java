@@ -35,15 +35,15 @@ public class UserInfo {
         this.token = token;
         //send
         if (token.contains(IntentUtils.providerRole)) {
-            actor = 1;
+            this.actor = 1;
         }
         //take
         else if (token.contains(IntentUtils.clientRole)) {
-            actor = 2;
+            this.actor = 2;
         }
         //快递员
         else if (token.contains(IntentUtils.courierRole)) {
-            actor = 3;
+            this.actor = 3;
         }
     }
 

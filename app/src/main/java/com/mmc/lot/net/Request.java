@@ -19,7 +19,9 @@ import com.mmc.lot.eventbus.ble.ActivateEvent;
 import com.mmc.lot.eventbus.ble.DisConnectEvent;
 import com.mmc.lot.eventbus.ble.SaveManifestEvent;
 import com.mmc.lot.eventbus.http.GetTransDataEvent;
+import com.mmc.lot.eventbus.http.RequestTempDataEvent;
 import com.mmc.lot.eventbus.http.SendFormDataEvent;
+import com.mmc.lot.eventbus.ui.GotoCharActivityEvent;
 import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.IntentUtils;
 import com.mmc.lot.util.RequestDataTransfer;
@@ -146,8 +148,9 @@ public class Request {
                 });
     }
 
-    private void requestTempData() {
-        Repository.init().getTemp("")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void requestTempData(RequestTempDataEvent requestTempDataEvent) {
+        Repository.init().getTemp()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<TempBean>() {
@@ -161,8 +164,12 @@ public class Request {
                         if (tempBean != null) {
                             if (tempBean.getC() == 1) {
                                 Toast.makeText(IotApplication.getContext(), "温度请求成功", Toast.LENGTH_SHORT).show();
+                                // TODO 处理数据并线性表显示
+                                EventBus.getDefault().post(new GotoCharActivityEvent());
 
                             } else {
+                                Log.e(TAG, "请求失败：" + tempBean.getM());
+
                                 Toast.makeText(IotApplication.getContext(), tempBean.getM(), Toast.LENGTH_SHORT).show();
 
                             }
@@ -187,7 +194,7 @@ public class Request {
 
 
     private void sendTagData() {
-        Repository.init().sendTagData("", "","", new ArrayList<Double>())
+        Repository.init().sendTagData()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<BaseBean>() {

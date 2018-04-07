@@ -1,10 +1,13 @@
 package com.mmc.lot.util;
 
+import android.util.Log;
+
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.mmc.lot.IotApplication;
+import com.mmc.lot.data.DataCenter;
 
 /**
  * @author zhaogaofeng
@@ -61,6 +64,8 @@ public final class LocationHelper {
         public void onReceiveLocation(BDLocation location) {
             try {
                 SharePreUtils.getInstance().setLocation(location);
+                DataCenter.SetUserInfo.setGps(location.getLongitude(), location.getLatitude());
+                Log.e("LocationHelper", "设置经纬度" + location.getLongitude() + ", " + location.getLatitude());
                 mLocationClient.stop();
                 mLocationClient.unRegisterLocationListener(mListener);
             } catch (Exception e) {

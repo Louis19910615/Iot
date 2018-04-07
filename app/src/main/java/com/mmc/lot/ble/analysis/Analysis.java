@@ -12,6 +12,7 @@ import com.mmc.lot.eventbus.ble.ReadManifestEvent;
 import com.mmc.lot.eventbus.ble.SaveManifestEvent;
 import com.mmc.lot.eventbus.ble.UploadTemperaturesEvent;
 import com.mmc.lot.eventbus.http.GetTransDataEvent;
+import com.mmc.lot.eventbus.http.RequestTempDataEvent;
 import com.mmc.lot.eventbus.http.SendFormDataEvent;
 import com.mmc.lot.eventbus.http.SendTagDataEvent;
 import com.mmc.lot.eventbus.ui.GotoCharActivityEvent;
@@ -108,10 +109,10 @@ public class Analysis {
                     break;
 
                 // 读取货单信息
+                case 0x17:
                 case 0x77:
                 case 0x57:
                     readManifest(analysisEvent.bytes);
-                    EventBus.getDefault().post(new ReadManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
                     break;
 
                 // 服务器确认
@@ -167,7 +168,7 @@ public class Analysis {
                 EventBus.getDefault().post(new GetMessageEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
             } else {
                 if (actor == 2) {
-
+                    EventBus.getDefault().post(new QueryIntervalEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                 } else {
                     if (actor == 3) {
                         EventBus.getDefault().post(new QueryIntervalEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
@@ -194,7 +195,7 @@ public class Analysis {
                 EventBus.getDefault().post(new SendFormDataEvent());
             } else {
                 if (actor == 2) {
-
+                    EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), true));
                 } else if (actor == 3) {
                     EventBus.getDefault().post(new UploadTemperaturesEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), true));
                 } else {
@@ -270,6 +271,12 @@ public class Analysis {
     private List<Byte> manifest = new ArrayList<>();
     private void readManifest(byte[] bytes) {
         System.out.print(Arrays.toString(bytes));
+        if (bytes[0] == 0x17) {
+            Log.e(TAG, "读取货单信息失败");
+            EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(),
+                    DataCenter.getInstance().getUserInfo().getToken()));
+            return;
+        }
         if (bytes[1] == (byte) 0xff) {
             Log.e(TAG, "读取货单信息失败");
             EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(),
@@ -305,8 +312,9 @@ public class Analysis {
                 Log.e(TAG, "manifest is " + manifestStr);
                 DataCenter.getInstance().setLogisticsInfo(manifestStr);
                 manifest.clear();
-            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-            EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息:" + manifestStr));
+                EventBus.getDefault().post(new ReadManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
+                EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息:" + manifestStr));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
                 EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
@@ -323,7 +331,8 @@ public class Analysis {
                 EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
             } else {
                 if (actor == 2) {
-
+                    EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                    EventBus.getDefault().post(new RequestTempDataEvent());
                 } else {
                     if (actor == 3) {
                         EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));

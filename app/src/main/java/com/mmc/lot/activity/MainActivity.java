@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         llTag = (LinearLayout) findViewById(R.id.ll_tag);
 
         etID = (EditText) findViewById(R.id.et_id);
+        etID.setText("C7:E4:E3:E2:E1:FE");
         etMsgID = (EditText) findViewById(R.id.et_send_id);
 
         rlTemp = (RelativeLayout) findViewById(R.id.rl_temp);
@@ -312,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 3. 回复绑定接口
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    private void sendTagData(SendTagDataEvent sendTagDataEvent) {
+    public void sendTagData(SendTagDataEvent sendTagDataEvent) {
         Repository.init().sendTagData()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -467,7 +468,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 获取物流信息接口
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
-    private void requestTransData(GetTransDataEvent getTransDataEvent) {
+    public void requestTransData(GetTransDataEvent getTransDataEvent) {
+        Log.e(TAG, "request trans data start.");
         Repository.init().getTransData(getTransDataEvent)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -480,9 +482,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onNext(TransBean baseBean) {
                         if (baseBean != null) {
-                            if (baseBean.getC() == 1) {
-
+                            Log.e(TAG, "TransBean is " + new Gson().toJson(baseBean));
+                            if (baseBean.getC() == 1 && baseBean.getO() != null) {
+                                Log.e(TAG, "从服务端获取到订单信息");
                                 int actor = DataCenter.getInstance().getUserInfo().getActor();
+                                Log.e(TAG, "actor is " + actor);
                                 if (actor == 1) {
                                     DataCenterUtil.parseTransBean(baseBean);
                                     ConnectOne.getInstance().setManifestStr(new Gson().toJson(DataCenter.getInstance().getLogisticsInfo()));
@@ -490,7 +494,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     EventBus.getDefault().post(new SaveManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                                 } else {
                                     if (actor == 2) {
-
+                                        DataCenterUtil.parseTransBean(baseBean);
+                                        EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
                                     } else {
                                         if (actor == 3) {
                                             DataCenterUtil.parseTransBean(baseBean);
@@ -507,6 +512,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                                        tvTemp.getText().toString(), baseBean);
 //                                finish();
                             } else {
+                                Log.e(TAG, "获取订单信息失败");
                                 Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
                                 IntentUtils.startOrderActivity(MainActivity.this);
                             }

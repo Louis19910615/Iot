@@ -1,5 +1,6 @@
 package com.mmc.lot.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class DeviceInfo {
     private String tagId;
 
     public DeviceInfo() {
-
+        temperatureDatas = new ArrayList<>();
     }
 
     public String getStarTime() {
