@@ -157,7 +157,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private void register() {
         Repository.init().register(etNickName.getText().toString(),
                 etPhone.getText().toString(),
-                etNickName.getText().toString(),
+                etNum.getText().toString(),
                 userType)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

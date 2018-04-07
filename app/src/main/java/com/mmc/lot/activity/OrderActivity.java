@@ -106,7 +106,7 @@ public class OrderActivity extends AppCompatActivity implements View.OnClickList
                 ConnectOne.getInstance().setManifestStr(new Gson().toJson(DataCenter.getInstance().getLogisticsInfo()));
                 ConnectOne.getInstance().resetSaveNum();
                 EventBus.getDefault().post(new SaveManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-//                this.finish();
+                this.finish();
             } else {
                 EventBus.getDefault().post(new ShowToastEvent("请补全相关信息"));
             }

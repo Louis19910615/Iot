@@ -62,6 +62,7 @@ public class Analysis {
             switch (analysisEvent.bytes[0]) {
                 // 同步时间
                 case 0x11:
+                case 0x51:
                     syncTime(analysisEvent.bytes);
                     break;
 
@@ -277,7 +278,7 @@ public class Analysis {
                     DataCenter.getInstance().getUserInfo().getToken()));
             return;
         }
-        if (bytes[1] == (byte) 0xff) {
+        if (bytes[1] == (byte) 0xff || (bytes[1] == 0x04) && bytes[bytes.length - 1] == 0x57) {
             Log.e(TAG, "读取货单信息失败");
             EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(),
                     DataCenter.getInstance().getUserInfo().getToken()));

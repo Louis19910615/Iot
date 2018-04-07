@@ -521,6 +521,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     @Override
                     public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.e(TAG, "物流信息请求失败");
                         Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
                         EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                         EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));

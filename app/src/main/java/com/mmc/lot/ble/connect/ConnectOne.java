@@ -15,6 +15,7 @@ import com.blakequ.bluetooth_manager_lib.connect.ConnectState;
 import com.blakequ.bluetooth_manager_lib.connect.ConnectStateListener;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.data.DataCenter;
+import com.mmc.lot.eventbus.ble.ActivateEvent;
 import com.mmc.lot.eventbus.ble.GetMessageEvent;
 import com.mmc.lot.eventbus.ble.QueryIntervalEvent;
 import com.mmc.lot.eventbus.ble.ReadManifestEvent;
@@ -32,6 +33,7 @@ import com.mmc.lot.eventbus.ui.ShowToastEvent;
 import com.mmc.lot.util.CrcUtil;
 import com.mmc.lot.util.DataTransfer;
 import com.mmc.lot.util.DateParseUtil;
+import com.mmc.lot.util.PrintHexBinary;
 import com.orhanobut.logger.Logger;
 
 import org.greenrobot.eventbus.EventBus;
@@ -130,7 +132,6 @@ public class ConnectOne {
                 super.onCharacteristicChanged(gatt, characteristic);
                 Log.e(TAG, "characteristic change is " + Arrays.toString(characteristic.getValue()));
                 EventBus.getDefault().post(new AnalysisEvent(characteristic.getValue()));
-
             }
 
             @Override
@@ -214,6 +215,7 @@ public class ConnectOne {
                 } else {
                     connectManager.disconnect(enableEvent.getDeviceAddress());
                 }
+                connectManager.cleanSubscribeData();
                 return isSuccess;
             }
         }
@@ -236,7 +238,9 @@ public class ConnectOne {
             data[i + 2] = dateTime[i];
         }
 
-        data[9] = CrcUtil.calcCrc8(data);
+        data[9] = CrcUtil.calCrc8(data);
+
+        Log.e(TAG, "data is " + Arrays.toString(data));
 
         return write(syncTimeEvent.getDeviceAddress(), data);
     }
@@ -362,27 +366,36 @@ public class ConnectOne {
     // 保存货单信息 data固定 = 14 单次
     private boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
 
+        Log.e(TAG, "save manifest start." + directiveFlag);
         byte[] data = new byte[19];
         if (directiveFlag == 0x00) {
             data[0] = 0x06;
         } else {
-            data[0] = (byte) (0x06 & directiveFlag);
+            data[0] = (byte) (0x06 | directiveFlag);
         }
-
-        data[1] = 0x11;
-        byte[] offsetByte = DataTransfer.short2byte((short) offset);
-        data[2] = offsetByte[0];
-        data[3] = offsetByte[1];
-
+        Log.e(TAG, "save manifest start11.");
+        data[1] = (byte)16;
+        if (offset == 0) {
+            data[2] = 0x00;
+            data[3] = 0x00;
+        } else {
+            byte[] offsetByte = DataTransfer.short2byte((short) offset);
+            data[2] = offsetByte[0];
+            data[3] = offsetByte[1];
+        }
+        Log.e(TAG, "save manifest start22.");
         for (int i = 0; i < 14; i++) {
             if (res.length > i) {
-                data[i + 3] = res[i];
+                data[i + 4] = res[i];
+                Log.e(TAG, "data " + i + " is " + res[i]);
             } else {
-                data[i + 3] = (byte) 0xff;
+                data[i + 4] = (byte) 0xff;
             }
         }
-
+        Log.e(TAG, "save manifest start33.");
         data[18] = CrcUtil.calCrc8(data);
+        Log.e(TAG, "data is " + Arrays.toString(data));
+        Log.e(TAG, "save manifest start44.");
 
         return write(deviceAddress, data);
     }
@@ -405,9 +418,9 @@ public class ConnectOne {
 
     // 服务器确认
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public boolean activate(String deviceAddress) {
+    public boolean activate(ActivateEvent activateEvent) {
         byte[] data = new byte[]{0x08, 0x00, 0x08};
-        return write(deviceAddress, data);
+        return write(activateEvent.getDeviceAddress(), data);
 
     }
 
@@ -423,6 +436,7 @@ public class ConnectOne {
         if (gatt == null) {
             return false;
         }
+        connectManager.cleanSubscribeData();
         BluetoothGattService bluetoothGattService = gatt.getService(IOT_SERVICE_UUID);
         if (bluetoothGattService != null) {
             BluetoothGattCharacteristic txCharacteristic = bluetoothGattService.getCharacteristic(ServiceUuidConstant.TX_CHAR_UUID);
