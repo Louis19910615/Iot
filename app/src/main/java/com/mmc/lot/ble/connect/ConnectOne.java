@@ -293,6 +293,7 @@ public class ConnectOne {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public boolean saveManifest(SaveManifestEvent saveManifestEvent) {
+        Log.e(TAG, "save manifest start.");
         // string --> byte[]
         try {
             byte[] resBytes = manifestStr.getBytes("UTF-8");
@@ -313,6 +314,7 @@ public class ConnectOne {
                 saveManifest(saveManifestEvent.getDeviceAddress(), resByteOne, flag, saveNum);
                 saveNum++;
                 saveNum = saveNum * 14;
+                Log.e(TAG, "save num is " + saveNum);
             } else {
                 Log.e(TAG, "保存货单信息成功");
                 EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));

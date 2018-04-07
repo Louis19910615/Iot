@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -57,7 +58,7 @@ public class OrderActivity extends AppCompatActivity implements View.OnClickList
         etCompany = (EditText) findViewById(R.id.et_send_id);
         etSendName = (EditText) findViewById(R.id.et_send_name);
         etSendAddr = (EditText) findViewById(R.id.et_send_addr_id);
-        etSendName = (EditText) findViewById(R.id.et_send_phone);
+        etSendPhone = (EditText) findViewById(R.id.et_send_phone);
 
         etTakeName = (EditText) findViewById(R.id.et_take_name);
         etTakeAddr = (EditText) findViewById(R.id.et_take_addr_id);
@@ -82,11 +83,12 @@ public class OrderActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View v) {
         if (v == tvFinish) {
             if (checkParsms()) {
+                Log.e("OrderActivity", "");
                 setLogisticsInfo();
                 ConnectOne.getInstance().setManifestStr(new Gson().toJson(DataCenter.getInstance().getLogisticsInfo()));
                 ConnectOne.getInstance().resetSaveNum();
                 EventBus.getDefault().post(new SaveManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-                this.finish();
+//                this.finish();
             } else {
                 EventBus.getDefault().post(new ShowToastEvent("请补全相关信息"));
             }
