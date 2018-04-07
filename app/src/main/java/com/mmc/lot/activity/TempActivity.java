@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mmc.lot.R;
 
@@ -47,8 +48,13 @@ public class TempActivity extends AppCompatActivity {
         tvConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 String max = etTempMax.getText().toString();
                 String min = etTempMin.getText().toString();
+                if ((Integer.parseInt(min)) > Integer.parseInt(max)) {
+                    Toast.makeText(TempActivity.this, "下限温度不能大于上限温度", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String temp = max + "-" + min + "°C";
                 Intent intent = new Intent();
                 intent.putExtra("min",min);

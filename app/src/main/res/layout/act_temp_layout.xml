@@ -54,6 +54,8 @@
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
                 android:lines="1"
+                android:hint="最高温度"
+                android:textSize="14dp"
                 android:inputType="numberDecimal|numberSigned"
                 android:background="@null"
                 android:numeric="integer" />
@@ -96,6 +98,8 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
+                android:hint="最低温度"
+                android:textSize="14dp"
                 android:inputType="numberDecimal|numberSigned"
                 android:background="@null" />
 
