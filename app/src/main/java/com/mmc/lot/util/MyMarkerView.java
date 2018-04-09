@@ -11,6 +11,8 @@ import com.github.mikephil.charting.utils.MPPointF;
 import com.github.mikephil.charting.utils.Utils;
 import com.mmc.lot.R;
 
+import java.text.DecimalFormat;
+
 /**
  * Custom implementation of the MarkerView.
  * 
@@ -19,11 +21,15 @@ import com.mmc.lot.R;
 public class MyMarkerView extends MarkerView {
 
     private TextView tvContent;
+    private DecimalFormat format;
+
 
     public MyMarkerView(Context context, int layoutResource) {
         super(context, layoutResource);
 
         tvContent = (TextView) findViewById(R.id.tvContent);
+        format = new DecimalFormat("###0.00");
+
     }
 
     // callbacks everytime the MarkerView is redrawn, can be used to update the
@@ -38,7 +44,7 @@ public class MyMarkerView extends MarkerView {
             tvContent.setText("" + Utils.formatNumber(ce.getHigh(), 0, true));
         } else {
 
-            tvContent.setText("" + Utils.formatNumber(e.getY(), 0, true));
+            tvContent.setText("" + format.format(e.getY()));
         }
 
         super.refreshContent(e, highlight);

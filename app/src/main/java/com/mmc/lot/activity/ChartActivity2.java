@@ -115,11 +115,11 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         xAxis.setValueFormatter(new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-//                if (value % 2 == 0) {
-//                    return mValues.get((int) value).getData() +"";
-//                }
-//                return "";
-                return mValues.get((int) value).getData() + "";
+                if (value % 2 == 0) {
+                    return mValues.get((int) value).getData() +"";
+                }
+                return "";
+//                return mValues.get((int) value).getData() + "";
             }
         });
 
@@ -251,7 +251,7 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
             set1.setFormSize(15.f);
 
             //格式化显示数据
-            final DecimalFormat mFormat = new DecimalFormat("###,###,##0");
+            final DecimalFormat mFormat = new DecimalFormat("###,###,##0.00");
             set1.setValueFormatter(new IValueFormatter() {
                 @Override
                 public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
