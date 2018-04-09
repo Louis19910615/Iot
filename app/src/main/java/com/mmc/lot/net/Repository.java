@@ -1,12 +1,11 @@
 package com.mmc.lot.net;
 
-import android.nfc.Tag;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.BindBeanParent;
 import com.mmc.lot.bean.FormBean;
-import com.mmc.lot.bean.BaseBean;
 import com.mmc.lot.bean.TagBean;
 import com.mmc.lot.bean.TempBean;
 import com.mmc.lot.bean.TransBean;
@@ -14,13 +13,7 @@ import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.eventbus.http.GetTransDataEvent;
 import com.mmc.lot.util.SharePreUtils;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -89,7 +82,7 @@ public class Repository {
         map.put("phone", phone);
         map.put("password", password);
         map.put("usertype", usertype);
-        map.put("address", "北京");
+        map.put("address", SharePreUtils.getInstance().getCity());
         return apiService.register(map);
     }
 
@@ -114,6 +107,7 @@ public class Repository {
         Map<String, String> map = new HashMap<>();
         map.put("token", token);
         map.put("tagid", DataCenter.getInstance().getDeviceInfo().getTagId());
+//        map.put("tagid", "123456789101");
         return apiService.getTempData(map);
     }
 
@@ -132,6 +126,7 @@ public class Repository {
 
     /**
      * 上传温度数据
+     *
      * @return
      */
     public Observable<BaseBean> sendTagData() {
@@ -145,7 +140,7 @@ public class Repository {
         infoBean.setMac(DataCenter.getInstance().getDeviceInfo().getDeviceAddress());
         infoBean.setEnergy(DataCenter.getInstance().getDeviceInfo().getRemainingBattery());
         // TODO 获取GPS导航
-        infoBean.setGps("113.92,22.52");
+        infoBean.setGps(SharePreUtils.getInstance().getLongitude() + "," + SharePreUtils.getInstance().getLatitude());
         infoBean.setIntervalTime(DataCenter.getInstance().getDeviceInfo().getTimeInterval());
         infoBean.setStartTime(DataCenter.getInstance().getDeviceInfo().getStarTime());
         infoBean.setTagID(DataCenter.getInstance().getDeviceInfo().getTagId());

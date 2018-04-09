@@ -8,12 +8,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.MarkerView;
@@ -22,20 +24,26 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.Utils;
+import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.mmc.lot.R;
 import com.mmc.lot.data.DataCenter;
 import com.mmc.lot.util.MyMarkerView;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * @author by zhangzd on 2018/4/2.
@@ -91,28 +99,38 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         mChart.setMarker(mv); // Set the marker to the chart
 
         // x-axis limit line
-        LimitLine llXAxis = new LimitLine(10f, "Index 10");
-        llXAxis.setLineWidth(4f);
-        llXAxis.enableDashedLine(10f, 10f, 0f);
-        llXAxis.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
-        llXAxis.setTextSize(10f);
+//        LimitLine llXAxis = new LimitLine(10f, "Index 10");
+//        llXAxis.setLineWidth(4f);
+//        llXAxis.enableDashedLine(10f, 10f, 0f);
+//        llXAxis.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
+//        llXAxis.setTextSize(10f);
 
         XAxis xAxis = mChart.getXAxis();
         xAxis.enableGridDashedLine(10f, 10f, 0f);
-        //xAxis.setValueFormatter(new MyCustomXAxisValueFormatter());
-        //xAxis.addLimitLine(llXAxis); // add x-axis limit line
+        xAxis.setDrawGridLines(false);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawAxisLine(true);
+        xAxis.setDrawLabels(true);
+        xAxis.setTextSize(10f);
+        xAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+//                if (value % 2 == 0) {
+//                    return mValues.get((int) value).getData() +"";
+//                }
+//                return "";
+                return mValues.get((int) value).getData() + "";
+            }
+        });
 
-
-//        Typeface tf = Typeface.createFromAsset(getAssets(), "OpenSans-Regular.ttf");
-
-        LimitLine ll1 = new LimitLine(150f, "Upper Limit");
+        LimitLine ll1 = new LimitLine(60f, "");
         ll1.setLineWidth(4f);
         ll1.enableDashedLine(10f, 10f, 0f);
-        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+        ll1.setLabelPosition(LimitLine.LimitLabelPosition.LEFT_BOTTOM);
         ll1.setTextSize(10f);
 //        ll1.setTypeface(tf);
 
-        LimitLine ll2 = new LimitLine(-50f, "Lower Limit");
+        LimitLine ll2 = new LimitLine(-30f, "");
         ll2.setLineWidth(4f);
         ll2.enableDashedLine(10f, 10f, 0f);
         ll2.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
@@ -123,11 +141,20 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
         leftAxis.addLimitLine(ll1);
         leftAxis.addLimitLine(ll2);
-        leftAxis.setAxisMaximum(50f);
-        leftAxis.setAxisMinimum(-50f);
+        leftAxis.setAxisMaximum(60f);
+        leftAxis.setAxisMinimum(-60f);
         //leftAxis.setYOffset(20f);
         leftAxis.enableGridDashedLine(10f, 10f, 0f);
-        leftAxis.setDrawZeroLine(false);
+        leftAxis.setDrawZeroLine(true);
+        leftAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return value == 0 ? value + "" : value + "°C";
+            }
+        });
+
+        // limit lines are drawn behind data (and not on top)
+        leftAxis.setDrawLimitLinesBehindData(true);
 
         // limit lines are drawn behind data (and not on top)
         leftAxis.setDrawLimitLinesBehindData(true);
@@ -135,7 +162,7 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         mChart.getAxisRight().setEnabled(false);
 
         // add data
-        setData(8, 100);
+        setData();
 
         mChart.animateX(2500);
         //mChart.invalidate();
@@ -148,32 +175,51 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
 
     }
 
+    private List<Entry> mValues = new ArrayList<>();
+    private int hour, minute;
 
-    private void setData(int count, float range) {
+    private String timeStamp2Date(String timer) {
+        int zero = timer.indexOf(" ");
+        int first = timer.indexOf(":");
+        int last = timer.lastIndexOf(":");
+        try {
+            hour = Integer.parseInt(timer.substring(zero + 1, first));
+            minute = Integer.parseInt(timer.substring(first + 1, last));
+            Log.d("zzDebug", "hour:" + hour + "  minute:" + minute);
+        } catch (Exception e) {
 
-        ArrayList<Entry> values = new ArrayList<Entry>();
-        List<Double> list = new ArrayList<Double>();
-        list.add(30.11);
-        list.add(-20.3);
-        list.add(25.1);
-        list.add(-25.16);
-        list.add(40.11);
-        list.add(-10.31);
-        list.add(55.12);
-        list.add(-35.16);
+        }
+        return timer.substring(5, timer.length() - 3);
+    }
 
-        List<Double> tempdata = DataCenter.getInstance().getDeviceInfo().getTemperatureDatas();
+    private void setData() {
+
+        List<Double> tempdata = new ArrayList<Double>();
+
+        tempdata = DataCenter.getInstance().getDeviceInfo().getTemperatureDatas();
         if (tempdata == null || tempdata.size() == 0) {
             return;
         }
-
         Double[] array = new Double[tempdata.size()];
+//        Double[] array = {30.11,-20.31,25.12,-25.16,40.11,-10.31,55.12,-35.16,
+//                30.11,-20.31,25.12,-25.16,40.11,-10.31,55.12,-35.16,40.11,-10.31,
+//                55.12,-35.16,30.11,-20.31,25.12,-25.16,40.11,-10.31,55.12,-35.16,
+//                40.11,-10.31,55.12,-35.16};
+
+//        tempdata = Arrays.asList(array);
         tempdata.toArray(array);
+        //TODO Device  StartTime
+        String startTime = timeStamp2Date("2018-04-09 9:38:54");
 
         for (int i = 0; i < tempdata.size(); i++) {
             BigDecimal value = new BigDecimal(array[i].floatValue());
             float val = value.floatValue();
-            values.add(new Entry(i, val, getResources().getDrawable(R.drawable.star)));
+            if (i == 0) {
+                mValues.add(new Entry(i, val, startTime));
+            } else {
+                handleHourMinute();
+                mValues.add(new Entry(i, val, hour + ":" + minute));
+            }
         }
 
         LineDataSet set1;
@@ -181,28 +227,37 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         if (mChart.getData() != null &&
                 mChart.getData().getDataSetCount() > 0) {
             set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
-            set1.setValues(values);
+            set1.setValues(mValues);
             mChart.getData().notifyDataChanged();
             mChart.notifyDataSetChanged();
         } else {
             // create a dataset and give it a type
-            set1 = new LineDataSet(values, "DataSet 1");
+            set1 = new LineDataSet(mValues, "温度曲线");
 
             set1.setDrawIcons(false);
 
             // set the line to be drawn like this "- - - - - -"
             set1.enableDashedLine(10f, 5f, 0f);
             set1.enableDashedHighlightLine(10f, 5f, 0f);
-            set1.setColor(Color.BLACK);
-            set1.setCircleColor(Color.BLACK);
+            set1.setColor(Color.GREEN);
+            set1.setCircleColor(Color.GREEN);
             set1.setLineWidth(1f);
             set1.setCircleRadius(3f);
             set1.setDrawCircleHole(false);
             set1.setValueTextSize(9f);
-            set1.setDrawFilled(true);
+            set1.setDrawFilled(false);
             set1.setFormLineWidth(1f);
             set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
             set1.setFormSize(15.f);
+
+            //格式化显示数据
+            final DecimalFormat mFormat = new DecimalFormat("###,###,##0");
+            set1.setValueFormatter(new IValueFormatter() {
+                @Override
+                public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
+                    return mFormat.format(value);
+                }
+            });
 
             if (Utils.getSDKInt() >= 18) {
                 // fill drawable only supported on api level 18 and above
@@ -220,6 +275,14 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
 
             // set data
             mChart.setData(data);
+        }
+    }
+
+    private void handleHourMinute() {
+        minute += 10;
+        if (minute > 60) {
+            hour++;
+            minute = minute - 60;
         }
     }
 

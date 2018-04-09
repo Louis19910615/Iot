@@ -31,8 +31,7 @@ import com.google.gson.Gson;
 import com.mmc.lot.IotApplication;
 import com.mmc.lot.R;
 import com.mmc.lot.bean.BaseBean;
-import com.mmc.lot.bean.BindBeanParent;
-import com.mmc.lot.bean.FormBean;
+import com.mmc.lot.bean.TempBean;
 import com.mmc.lot.bean.TransBean;
 import com.mmc.lot.ble.analysis.Analysis;
 import com.mmc.lot.ble.connect.ConnectOne;
@@ -62,6 +61,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observer;
@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         EventBus.getDefault().register(this);
         mBluetoothUtils = BluetoothUtils.getInstance(this);
-
 //        Log.e(TAG, "你好大北京");
 //        try {
 //            byte[] bytes = new String("你好大北京").getBytes("UTF8");
@@ -256,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         if (v == tvFinish) {
-
+            IntentUtils.startChartActivity(this);
             String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
             //send
             if (token.contains(IntentUtils.providerRole)) {
@@ -754,5 +753,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void gotoCharActivity(GotoCharActivityEvent gotoCharActivityEvent) {
         Intent intent = new Intent(MainActivity.this, ChartActivity2.class);
         startActivity(intent);
+    }
+
+    /**
+     * 请求温度接口
+     */
+    private void requestTempData() {
+        Repository.init().getTemp()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<TempBean>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+
+                    @Override
+                    public void onNext(TempBean tempBean) {
+                        if (tempBean != null) {
+                            if (tempBean.getC() == 1) {
+                                Toast.makeText(IotApplication.getContext(), "温度请求成功", Toast.LENGTH_SHORT).show();
+                                //填充温度数据
+                                if (tempBean.getO() != null && !TextUtils.isEmpty(tempBean.getO().getTEMP())) {
+                                    String temp = tempBean.getO().getTEMP() + ",";
+                                    String[] tempArray = temp.split(",");
+                                    List<Double> data = new ArrayList<>();
+                                    for (String str : tempArray) {
+                                        data.add(Double.parseDouble(str));
+                                    }
+                                    DataCenter.getInstance().getDeviceInfo().setTemperatureDatas(data);
+                                }
+                            } else {
+                                Toast.makeText(IotApplication.getContext(), tempBean.getM(), Toast.LENGTH_SHORT).show();
+
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(IotApplication.getContext(), "温度请求失败", Toast.LENGTH_SHORT).show();
+                        ;
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 }

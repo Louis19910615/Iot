@@ -62,7 +62,7 @@ public class DateParseUtil {
         String minStr = int2Str(min);
         String secStr = int2Str(sec);
 
-        return yearStr + "/" + monthStr + "/" + dayStr + " " + hourStr + ":" + minStr + ":" + secStr;
+        return yearStr + "-" + monthStr + "-" + dayStr + " " + hourStr + ":" + minStr + ":" + secStr;
 
     }
 

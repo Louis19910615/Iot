@@ -11,9 +11,6 @@ import com.mmc.lot.activity.OrderActivity;
 import com.mmc.lot.activity.SendDetailActivity;
 import com.mmc.lot.bean.TransBean;
 
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 /**
  * Created by zhangzd on 2018/3/31.
  */
@@ -71,6 +68,11 @@ public class IntentUtils {
 
     public static void startOrderActivity(Context context) {
         Intent intent = new Intent(context, OrderActivity.class);
+        context.startActivity(intent);
+    }
+
+    public static void startChartActivity(Context context) {
+        Intent intent = new Intent(context, ChartActivity2.class);
         context.startActivity(intent);
     }
 }
