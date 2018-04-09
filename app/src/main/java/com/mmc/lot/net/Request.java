@@ -1,5 +1,6 @@
 package com.mmc.lot.net;
 
+import android.text.TextUtils;
 import android.util.EventLog;
 import android.util.Log;
 import android.widget.Toast;
@@ -31,6 +32,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -164,7 +166,18 @@ public class Request {
                         if (tempBean != null) {
                             if (tempBean.getC() == 1) {
                                 Toast.makeText(IotApplication.getContext(), "温度请求成功", Toast.LENGTH_SHORT).show();
-                                // TODO 处理数据并线性表显示
+                                //填充温度数据
+                                if (tempBean.getO() != null && !TextUtils.isEmpty(tempBean.getO().getTEMP())) {
+                                    String temp = tempBean.getO().getTEMP() + ",";
+                                    String[] tempArray = temp.split(",");
+                                    List<Double> data = new ArrayList<>();
+                                    for (String str : tempArray) {
+                                        data.add(Double.parseDouble(str));
+                                    }
+                                    DataCenter.getInstance().getDeviceInfo().setTemperatureDatas(data);
+                                    String starTime = tempBean.getO().getSTARTTIME();
+                                    DataCenter.SetDeviceInfo.setStartTime(starTime);
+                                }
                                 EventBus.getDefault().post(new GotoCharActivityEvent());
 
                             } else {

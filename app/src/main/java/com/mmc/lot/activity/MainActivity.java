@@ -251,39 +251,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
     }
 
-
     @Override
     public void onClick(View v) {
         if (v == tvFinish) {
-            IntentUtils.startChartActivity(this);
-            String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
-            //send
-            if (token.contains(IntentUtils.providerRole)) {
-                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
-                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-//                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
-            }
-            //take
-            else if (token.contains(IntentUtils.clientRole)) {
-                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
-                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-//                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
-            }
-            //快递员
-            else if (token.contains(IntentUtils.courierRole)) {
-                if (TextUtils.isEmpty(etMsgID.getText().toString())) {
-                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-//                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(),
-//                        DataCenter.getInstance().getDeviceInfo().getTemperatureDatas());
+            String addressName = etID.getText().toString().toUpperCase();
 
-//                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+            if (addressName.split(":").length == 6) {
+                startCheckPermission();
+            } else {
+                Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
             }
+
+//            IntentUtils.startChartActivity(this);
+//            String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
+//            // send
+//            if (token.contains(IntentUtils.providerRole)) {
+//                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
+//                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+////                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(), DeviceInfo.getInstance().getTempDatas());
+//            }
+//            //take
+//            else if (token.contains(IntentUtils.clientRole)) {
+//                if (TextUtils.isEmpty(etID.getText().toString()) || TextUtils.isEmpty(etMsgID.getText().toString())) {
+//                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+////                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+//            }
+//            //快递员
+//            else if (token.contains(IntentUtils.courierRole)) {
+//                if (TextUtils.isEmpty(etMsgID.getText().toString())) {
+//                    Toast.makeText(this, "id 不能为空", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+////                sendTagData(etID.getText().toString(), etMsgID.getText().toString(), tvTemp.getText().toString(),
+////                        DataCenter.getInstance().getDeviceInfo().getTemperatureDatas());
+//
+////                requestTransData(etID.getText().toString(), etMsgID.getText().toString());
+//            }
 
         } else if (v == ivSet) {
             Intent intent = new Intent(this, SettingActivity.class);
@@ -292,15 +299,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(this, TempActivity.class);
             startActivityForResult(intent, 201);
         } else if (v == ivCamera) {
-            String addressName = etID.getText().toString().toUpperCase();
-
-            if (addressName.split(":").length == 6) {
-                startCheckPermission();
-            } else {
-                Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
-            }
-//            Intent intent = new Intent(this, ZxingActivity.class);
-//            startActivityForResult(intent, 202);
+            Intent intent = new Intent(this, ZxingActivity.class);
+            startActivityForResult(intent, 202);
         } else if (v == ivMsgCamera) {
             Intent intent = new Intent(this, ZxingActivity.class);
             startActivityForResult(intent, 203);
@@ -470,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void requestTransData(GetTransDataEvent getTransDataEvent) {
         Log.e(TAG, "request trans data start.");
-        Repository.init().getTransData(getTransDataEvent)
+        Repository.init().getTransData(getTransDataEvent.getToken(), getTransDataEvent.getTagId())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<TransBean>() {
@@ -533,23 +533,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.e(TAG, "物流信息请求失败");
-//                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
-//                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-//                        EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));
+                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                        EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));
                         // TODO 修复好时间后，删除此逻辑
-                        int actor = DataCenter.getInstance().getUserInfo().getActor();
-                        if (actor == 1) {
-                            Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
-                            IntentUtils.startOrderActivity(MainActivity.this);
-                        }
-                        if (actor == 3) {
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
-                                }
-                            }, 2000);
-                        }
+//                        int actor = DataCenter.getInstance().getUserInfo().getActor();
+//                        if (actor == 1) {
+//                            Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+//                            IntentUtils.startOrderActivity(MainActivity.this);
+//                        }
+//                        if (actor == 3) {
+//                            new Handler().postDelayed(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    EventBus.getDefault().post(new SyncTimeEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), System.currentTimeMillis()));
+//                                }
+//                            }, 2000);
+//                        }
 
                     }
 
@@ -591,7 +591,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void bleStateOn(BleStateOnEvent bleStateOnEvent) {
         if (!isBleStateOn) {
-            Logger.e(TAG, "isBleStateOn is " + isBleStateOn);
+            Log.e(TAG, "isBleStateOn is " + isBleStateOn);
             // init scanner
             Scanner.getInstance();
             // init connect one

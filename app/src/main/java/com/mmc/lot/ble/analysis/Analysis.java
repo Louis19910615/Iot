@@ -57,7 +57,7 @@ public class Analysis {
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     public void analysis(AnalysisEvent analysisEvent) {
-
+        Log.e(TAG, "analysis is " + Arrays.toString(analysisEvent.bytes));
         if (crcCkeck(analysisEvent.bytes)) {
             switch (analysisEvent.bytes[0]) {
                 // 同步时间
@@ -278,7 +278,7 @@ public class Analysis {
                     DataCenter.getInstance().getUserInfo().getToken()));
             return;
         }
-        if (bytes[1] == (byte) 0xff || (bytes[1] == 0x04) && bytes[bytes.length - 1] == 0x57) {
+        if (bytes[1] == (byte) 0xff) {
             Log.e(TAG, "读取货单信息失败");
             EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(),
                     DataCenter.getInstance().getUserInfo().getToken()));
@@ -325,7 +325,7 @@ public class Analysis {
     }
 
     private void activate(byte[] bytes) {
-        if (bytes[1] == 0x00) {
+//        if (bytes[1] == 0x00) {
             int actor = DataCenter.getInstance().getUserInfo().getActor();
             if (actor == 1) {
                 EventBus.getDefault().post(new ShowToastEvent("已完成"));
@@ -343,11 +343,11 @@ public class Analysis {
                     }
                 }
             }
-        } else {
-            //TODO 服务器确认失败
-            EventBus.getDefault().post(new ShowToastEvent("与Tag确认失败，请重试"));
-            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-        }
+//        } else {
+//            //TODO 服务器确认失败
+//            EventBus.getDefault().post(new ShowToastEvent("与Tag确认失败，请重试"));
+//            EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+//        }
     }
 
     private void resetTag(byte[] bytes) {

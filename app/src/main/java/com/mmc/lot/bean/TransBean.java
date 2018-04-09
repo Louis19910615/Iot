@@ -95,7 +95,7 @@ public class TransBean implements Serializable {
         private String GPSX;
         private String NAME;
         private String CGADDRESS;
-        private long UPTIME;
+        private String UPTIME;
         private String MINRANGE;
         private String ADDRESS;
         private String TAGDESCRIPTION;
@@ -215,11 +215,11 @@ public class TransBean implements Serializable {
             this.CGADDRESS = CGADDRESS;
         }
 
-        public long getUPTIME() {
+        public String getUPTIME() {
             return UPTIME;
         }
 
-        public void setUPTIME(long UPTIME) {
+        public void setUPTIME(String UPTIME) {
             this.UPTIME = UPTIME;
         }
 

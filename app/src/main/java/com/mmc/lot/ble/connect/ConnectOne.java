@@ -204,10 +204,12 @@ public class ConnectOne {
                     } else {
                         // take
                         if (actor == 2) {
+                            Log.e(TAG, "actor is " + 200);
                             EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(), DataCenter.getInstance().getUserInfo().getToken()));
                         } else {
                             // 快递员
                             if (actor == 3) {
+                                Log.e(TAG, "actor is " + 300);
                                 EventBus.getDefault().post(new GetTransDataEvent(DataCenter.getInstance().getDeviceInfo().getTagId(), DataCenter.getInstance().getUserInfo().getToken()));
                             }
                         }
@@ -301,13 +303,13 @@ public class ConnectOne {
         // string --> byte[]
         try {
             byte[] resBytes = manifestStr.getBytes("UTF-8");
-            byte[] resByteOne = new byte[14];
+            byte[] resByteOne = new byte[10];
             byte flag = 0x20;
 
 //            for (int i = 0; i < resBytes.length; i = i * 14) {
             if (saveNum < resBytes.length) {
                 Arrays.fill(resByteOne, (byte) 0xff);
-                for (int j = 0; j < 14; j++) {
+                for (int j = 0; j < 10; j++) {
                     if (saveNum + j < resBytes.length) {
                         resByteOne[j] = resBytes[saveNum + j];
                     } else {
@@ -317,7 +319,7 @@ public class ConnectOne {
                 }
                 saveManifest(saveManifestEvent.getDeviceAddress(), resByteOne, flag, saveNum);
                 saveNum++;
-                saveNum = saveNum * 14;
+                saveNum = saveNum * 10;
                 Log.e(TAG, "save num is " + saveNum);
             } else {
                 Log.e(TAG, "保存货单信息成功");
@@ -367,14 +369,14 @@ public class ConnectOne {
     private boolean saveManifest(String deviceAddress, byte[] res, byte directiveFlag, int offset) {
 
         Log.e(TAG, "save manifest start." + directiveFlag);
-        byte[] data = new byte[19];
+        byte[] data = new byte[15];
         if (directiveFlag == 0x00) {
             data[0] = 0x06;
         } else {
             data[0] = (byte) (0x06 | directiveFlag);
         }
         Log.e(TAG, "save manifest start11.");
-        data[1] = (byte)16;
+        data[1] = (byte)12;
         if (offset == 0) {
             data[2] = 0x00;
             data[3] = 0x00;
@@ -384,7 +386,7 @@ public class ConnectOne {
             data[3] = offsetByte[1];
         }
         Log.e(TAG, "save manifest start22.");
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 10; i++) {
             if (res.length > i) {
                 data[i + 4] = res[i];
                 Log.e(TAG, "data " + i + " is " + res[i]);
@@ -393,7 +395,7 @@ public class ConnectOne {
             }
         }
         Log.e(TAG, "save manifest start33.");
-        data[18] = CrcUtil.calCrc8(data);
+        data[14] = CrcUtil.calCrc8(data);
         Log.e(TAG, "data is " + Arrays.toString(data));
         Log.e(TAG, "save manifest start44.");
 

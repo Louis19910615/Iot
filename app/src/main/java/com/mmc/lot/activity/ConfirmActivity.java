@@ -79,7 +79,7 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
             TransBean.OBean bean = transBean.getO();
             if (bean != null) {
                 tvId.setText(bean.getTAGID());
-                tvStartTime.setText(timeStamp2Date(bean.getUPTIME()));
+                tvStartTime.setText(timeStamp2Date(Long.valueOf(bean.getUPTIME())));
                 String tempature = bean.getMINRANGE() + "-" + bean.getMAXRANGE() + "°C";
                 tvTemp.setText(tempature);
             }

@@ -208,8 +208,8 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
 
 //        tempdata = Arrays.asList(array);
         tempdata.toArray(array);
-        //TODO Device  StartTime
-        String startTime = timeStamp2Date("2018-04-09 9:38:54");
+        String startTime = timeStamp2Date(DataCenter.getInstance().getDeviceInfo().getStarTime());
+//                timeStamp2Date("2018-04-09 9:38:54");
 
         for (int i = 0; i < tempdata.size(); i++) {
             BigDecimal value = new BigDecimal(array[i].floatValue());

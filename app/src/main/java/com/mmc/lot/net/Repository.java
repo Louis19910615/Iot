@@ -114,12 +114,12 @@ public class Repository {
     /**
      * 获取物流信息
      */
-    public Observable<TransBean> getTransData(GetTransDataEvent getTransDataEvent) {
+    public Observable<TransBean> getTransData(String token, String tagid) {
 //        String token = SharePreUtils.getInstance().getString(SharePreUtils.USER_TOKEN, "");
-        Log.e("Repository", "getTransData()" + getTransDataEvent.getToken() + getTransDataEvent.getTagId());
+        Log.e("Repository", "getTransData()" + token + tagid);
         Map<String, String> map = new HashMap<>();
-        map.put("token", getTransDataEvent.getToken());
-        map.put("tagid", getTransDataEvent.getTagId());
+        map.put("token", token);
+        map.put("tagid", tagid);
 //        map.put("orderId", orderId);
         return apiService.getTransData(map);
     }
