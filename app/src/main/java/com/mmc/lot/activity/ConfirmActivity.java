@@ -153,12 +153,7 @@ public class ConfirmActivity extends AppCompatActivity implements View.OnClickLi
             finish();
         } else if (v == llTemp) {
             if (tempBean != null && tempBean.getO() != null
-                    && tempBean.getO().size() > 0 &&
-                    !TextUtils.isEmpty(tempBean.getO().get(0).getTEMP())) {
-                if ("[]".equals(tempBean.getO().get(0).getTEMP())) {
-                    Toast.makeText(ConfirmActivity.this, "获取温度数据失败", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                    && !TextUtils.isEmpty(tempBean.getO().getTEMP())) {
                 Intent intent = new Intent(ConfirmActivity.this, CharActivity.class);
                 intent.putExtra("tempBean", tempBean);
                 startActivity(intent);

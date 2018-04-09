@@ -58,7 +58,8 @@ public class SharePreUtils {
             if (location != null) {
                 Log.d("LocationHelper", location.getCountry() + "  "
                         + location.getProvince() + " " + location.getCity() + " "
-                        + " " + location.getDistrict());
+                        + " " + location.getDistrict() + " " + location.getLatitude() + " "+
+                        location.getLongitude());
                 editor = sharedPreferences.edit();
                 editor.putString("country", location.getCountry());
                 editor.putString("province", location.getProvince().replaceAll("省", "").replaceAll("市", ""));
