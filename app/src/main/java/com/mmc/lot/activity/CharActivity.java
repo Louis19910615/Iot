@@ -172,9 +172,8 @@ public class CharActivity extends AppCompatActivity {
         bodyData.getWeight().clear();
         bodyData.getCurrent_time().clear();
 
-        List<TempBean.OBean> beans = bean.getO();
-        TempBean.OBean oBean = beans.get(0);
-        long upTime = oBean.getUPTIME();
+        TempBean.OBean oBean = bean.getO();
+        String upTime = oBean.getUPTIME();
         String temp = oBean.getTEMP().substring(1, oBean.getTEMP().length() - 1);
         Log.d("zzDebug", "temp:" + temp);
         String[] array = temp.split(",");
@@ -191,7 +190,7 @@ public class CharActivity extends AppCompatActivity {
 
         for (int i = 0; i < length; i++) {
             long space = i * 60 * 1000;
-            current_time.add(upTime / 1000);
+            current_time.add(Long.parseLong(upTime) / 1000);
         }
         bodyData.setCurrent_time(current_time);
     }
