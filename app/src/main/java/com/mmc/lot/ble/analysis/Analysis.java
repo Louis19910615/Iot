@@ -218,7 +218,7 @@ public class Analysis {
         // TODO 乱序
         // data
         byte[] data = new byte[2];
-        for (int i = 0; i < datalength / 2; i++) {
+        for (int i = 0; i < (datalength - 2) / 2; i++) {
 //            2i  ---  2i + 1
             Arrays.fill(data, (byte) 0x00);
             data[0] = bytes[2 * i + 4];
