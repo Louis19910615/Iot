@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private EditText etID, etMsgID;
     private ImageView ivCamera, ivMsgCamera, ivBack, ivSet;
-    private TextView tvFinish;
+    private TextView tvFinish, statusTv;
     private BluetoothUtils mBluetoothUtils;
     private RelativeLayout rlTemp;
     private TextView tvTemp, tvSaftTemp;
@@ -161,6 +161,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvFinish = (TextView) findViewById(R.id.tv_finish);
         tvFinish.setOnClickListener(this);
         llTag = (LinearLayout) findViewById(R.id.ll_tag);
+        //状态显示
+        statusTv = (TextView) findViewById(R.id.tv_status);
 
         etID = (EditText) findViewById(R.id.et_id);
         etID.setText("C7:E4:E3:E2:E1:FE");
@@ -198,42 +200,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 llTag.setVisibility(View.VISIBLE);
             }
         }
-
-//        etID.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-////                etID.setText(s);
-////                etID.setSelection(s.length());
-//            }
-//        });
-//
-//        etMsgID.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-////                etMsgID.setText(s);
-////                etMsgID.setSelection(s.length());
-//            }
-//        });
     }
 
     @Override
