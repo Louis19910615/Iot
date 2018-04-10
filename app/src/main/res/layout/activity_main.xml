@@ -58,7 +58,7 @@
                 android:layout_marginRight="20dp"
                 android:layout_weight="1"
                 android:background="@null"
-                android:hint="XX:XX:XX:XX"
+                android:hint="请扫描二维码"
                 android:inputType="text"
                 android:lines="1"
                 android:numeric="integer" />
@@ -159,7 +159,7 @@
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="200dp"
         android:layout_above="@+id/tv_finish"
         android:layout_below="@+id/rl_temp"
         android:layout_margin="10dp"
@@ -168,7 +168,7 @@
         android:lineSpacingExtra="4dp"
         android:padding="10dp"
         android:text="状态信息"
-        tools:text="不管内容先填充满,不管内容先填充满,不管内容先填充满,不管内容先填充满,不管内容先填充满,不管内容先填充满," />
+        tools:text="" />
 
     <TextView
         android:id="@+id/tv_finish"

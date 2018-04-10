@@ -124,6 +124,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        initView();
+    }
+
     private void initView() {
         ivBack = (ImageView) findViewById(R.id.iv_title_bar_back);
         ivBack.setVisibility(View.GONE);
@@ -165,7 +171,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         statusTv = (TextView) findViewById(R.id.tv_status);
 
         etID = (EditText) findViewById(R.id.et_id);
-        etID.setText("C7:E4:E3:E2:E1:FE");
         etMsgID = (EditText) findViewById(R.id.et_send_id);
 
         rlTemp = (RelativeLayout) findViewById(R.id.rl_temp);
@@ -177,9 +182,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             //send
             if (token.contains(IntentUtils.providerRole)) {
-                rlTemp.setVisibility(View.VISIBLE);
-                tvTemp.setVisibility(View.VISIBLE);
-                tvSaftTemp.setVisibility(View.VISIBLE);
+                rlTemp.setVisibility(View.GONE);
+                tvTemp.setVisibility(View.GONE);
+                tvSaftTemp.setVisibility(View.GONE);
                 llTag.setVisibility(View.VISIBLE);
 
             }
@@ -222,9 +227,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (v == tvFinish) {
             String addressName = etID.getText().toString().toUpperCase();
 
-            if (addressName.split(":").length == 6) {
+            if (addressName.length() == 12) {
                 startCheckPermission();
-            } else {
+            }else {
                 Toast.makeText(this, "请输入有效Tag名称", Toast.LENGTH_LONG).show();
             }
 
@@ -489,8 +494,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                                finish();
                             } else {
                                 Log.e(TAG, "获取订单信息失败");
-                                Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
-                                IntentUtils.startOrderActivity(MainActivity.this);
+                                EventBus.getDefault().post(new ShowToastEvent(baseBean.getM()));
+                                int actor = DataCenter.getInstance().getUserInfo().getActor();
+                                if (actor == 2) {
+                                    EventBus.getDefault().post(new ShowToastEvent("断开连接"));
+                                    EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                                } else  {
+                                    if (actor == 3) {
+                                        EventBus.getDefault().post(new ShowToastEvent("断开连接"));
+                                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                                    } else {
+                                        if (actor == 1) {
+                                            IntentUtils.startOrderActivity(MainActivity.this);
+                                        }
+                                    }
+                                }
+//                                Toast.makeText(IotApplication.getContext(), baseBean.getM(), Toast.LENGTH_SHORT).show();
                             }
                         }
                     }
@@ -499,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onError(Throwable e) {
                         e.printStackTrace();
                         Log.e(TAG, "物流信息请求失败");
-                        Toast.makeText(IotApplication.getContext(), "物流信息请求失败", Toast.LENGTH_SHORT).show();
+                        EventBus.getDefault().post(new ShowToastEvent("物流信息请求失败"));
                         EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                         EventBus.getDefault().post(new ShowToastEvent("服务端异常，请重试"));
                         // TODO 修复好时间后，删除此逻辑
@@ -528,7 +547,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void showToast(ShowToastEvent showToastEvent) {
-        Toast.makeText(this, showToastEvent.getMessage(), Toast.LENGTH_SHORT).show();
+        statusTv.setText(statusTv.getText().toString() + "\r\n" + showToastEvent.getMessage());
+//        Toast.makeText(this, showToastEvent.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private boolean startCheckPermission() {
@@ -552,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private boolean isBleStateOn = false;
+    private static boolean isBleStateOn = false;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void bleStateOn(BleStateOnEvent bleStateOnEvent) {
@@ -567,11 +587,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // init request
             Request.getInstance();
             // post to scan
-            EventBus.getDefault().post(new ScanWithAddressEvent(etID.getText().toString().toUpperCase()));
+            EventBus.getDefault().post(new ScanWithAddressEvent(createMac(etID.getText().toString().toUpperCase())));
 
             isBleStateOn = true;
             unregisterBleActionReceiver(this);
+        } else {
+            if (Scanner.isScanning()) {
+                Scanner.stopScan();
+            }
+
+            EventBus.getDefault().post(new ScanWithAddressEvent(createMac(etID.getText().toString().toUpperCase())));
         }
+    }
+
+    private String createMac(String tagId) {
+        String mac = "";
+        if (tagId != null && tagId.length() == 12) {
+            mac = new StringBuilder().append(tagId.substring(0, 2)).append(":")
+                    .append(tagId.substring(2, 4)).append(":")
+                    .append(tagId.substring(4, 6)).append(":")
+                    .append(tagId.substring(6, 8)).append(":")
+                    .append(tagId.substring(8, 10)).append(":")
+                    .append(tagId.substring(10, 12))
+                    .toString();
+            Log.e(TAG, "mac is " + mac);
+        }
+        return mac;
     }
 
     @Override

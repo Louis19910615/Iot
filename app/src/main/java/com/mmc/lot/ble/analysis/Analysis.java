@@ -73,6 +73,12 @@ public class Analysis {
                     break;
 
                 // 上传温度数据
+                case 0x13:
+                    if (analysisEvent.bytes[1] == (byte)0xff) {
+                        EventBus.getDefault().post(new ShowToastEvent("读取数据过于频繁，已断开"));
+                        EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
+                        break;
+                    }
                 case 0x53:
                     uploadTemperatures(analysisEvent.bytes);
                     if (DataCenter.getInstance().getDeviceInfo().getTemperatureDatas().size() < 3) {
@@ -298,7 +304,7 @@ public class Analysis {
         // TODO 乱序
         // data
 //        byte[] data = new byte[datalength];
-        for (int i = 0; i < datalength; i++) {
+        for (int i = 0; i < datalength - 2; i++) {
 //            data[i] = bytes[i + 4];
             // TODO 添加进入读取货单信息 插入位置为offset
             manifest.add(bytes[i + 4]);
@@ -315,12 +321,14 @@ public class Analysis {
                 manifest.clear();
                 EventBus.getDefault().post(new ReadManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
                 EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
-                EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息:" + manifestStr));
+                EventBus.getDefault().post(new ShowToastEvent("该Tag已有货单信息"));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
                 EventBus.getDefault().post(new DisConnectEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress()));
                 EventBus.getDefault().post(new ShowToastEvent("异常断开，请重试。"));
             }
+        } else {
+            EventBus.getDefault().post(new ReadManifestEvent(DataCenter.getInstance().getDeviceInfo().getDeviceAddress(), false));
         }
     }
 

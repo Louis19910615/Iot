@@ -123,14 +123,16 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
             }
         });
 
-        LimitLine ll1 = new LimitLine(60f, "");
+        float left = DataCenter.getInstance().getLogisticsInfo().getMaxTemperature();
+        LimitLine ll1 = new LimitLine(left, "");
         ll1.setLineWidth(4f);
         ll1.enableDashedLine(10f, 10f, 0f);
         ll1.setLabelPosition(LimitLine.LimitLabelPosition.LEFT_BOTTOM);
         ll1.setTextSize(10f);
 //        ll1.setTypeface(tf);
 
-        LimitLine ll2 = new LimitLine(-30f, "");
+        float right = DataCenter.getInstance().getLogisticsInfo().getMinTemperature();
+        LimitLine ll2 = new LimitLine(right, "");
         ll2.setLineWidth(4f);
         ll2.enableDashedLine(10f, 10f, 0f);
         ll2.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_BOTTOM);
@@ -141,8 +143,8 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
         leftAxis.removeAllLimitLines(); // reset all limit lines to avoid overlapping lines
         leftAxis.addLimitLine(ll1);
         leftAxis.addLimitLine(ll2);
-        leftAxis.setAxisMaximum(60f);
-        leftAxis.setAxisMinimum(-60f);
+        leftAxis.setAxisMaximum(left + 20);
+        leftAxis.setAxisMinimum(right - 20);
         //leftAxis.setYOffset(20f);
         leftAxis.enableGridDashedLine(10f, 10f, 0f);
         leftAxis.setDrawZeroLine(true);
