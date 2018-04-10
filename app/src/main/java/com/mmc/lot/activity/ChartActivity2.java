@@ -246,6 +246,7 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
             set1.setDrawCircleHole(false);
             set1.setValueTextSize(9f);
             set1.setDrawFilled(false);
+            set1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
             set1.setFormLineWidth(1f);
             set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
             set1.setFormSize(15.f);
