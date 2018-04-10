@@ -116,7 +116,7 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 if (value % 2 == 0) {
-                    return mValues.get((int) value).getData() +"";
+                    return mValues.get((int) value).getData() + "";
                 }
                 return "";
 //                return mValues.get((int) value).getData() + "";
@@ -218,7 +218,14 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
                 mValues.add(new Entry(i, val, startTime));
             } else {
                 handleHourMinute();
-                mValues.add(new Entry(i, val, hour + ":" + minute));
+                String tempMinute;
+                if (minute < 10) {
+                    tempMinute = "0" + minute;
+                } else {
+                    tempMinute = minute + "";
+                }
+
+                mValues.add(new Entry(i, val, hour + ":" + tempMinute));
             }
         }
 
@@ -242,10 +249,11 @@ public class ChartActivity2 extends AppCompatActivity implements OnChartGestureL
             set1.setColor(Color.GREEN);
             set1.setCircleColor(Color.GREEN);
             set1.setLineWidth(1f);
-            set1.setCircleRadius(3f);
+            set1.setCircleRadius(1.5f);
             set1.setDrawCircleHole(false);
-            set1.setValueTextSize(9f);
+//            set1.setValueTextSize(9f);
             set1.setDrawFilled(false);
+            set1.setDrawValues(false);
             set1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
             set1.setFormLineWidth(1f);
             set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
